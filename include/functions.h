@@ -1291,7 +1291,7 @@ void func_800DF840(void); // func_800DF840
 void func_800DF86C(void); // func_800DF86C
 void func_800DF8EC(void); // func_800DF8EC
 int func_800DFAC8(Camera* camera, short param_2); // func_800DFAC8
-unsigned int func_800DFB14(Camera* camera, unsigned int param_2); // func_800DFB14
+unsigned int func_800DFB14(Camera* camera, s32 param_2); // func_800DFB14
 void func_800DFC1C(void); // func_800DFC1C
 void func_800DFC40(void); // func_800DFC40
 int func_800DFC68(Camera* camera); // func_800DFC68
@@ -1592,7 +1592,7 @@ void func_800EDA84(GlobalContext* ctxt, CutsceneContext* csCtx); // func_800EDA8
 void func_800EDBE0(GlobalContext* ctxt); // func_800EDBE0
 void nop_800EDDB0(GlobalContext* ctxt); // func_800EDDB0
 void func_800EDDBC(void); // func_800EDDBC
-void func_800EDDCC(GlobalContext* ctxt, unsigned int uParm2); // func_800EDDCC
+void func_800EDDCC(GlobalContext* ctxt, u8 uParm2); // func_800EDDCC
 void func_800EDE34(Actor* actor, GlobalContext* ctxt, int param_3); // func_800EDE34
 void func_800EDF24(void); // func_800EDF24
 void func_800EDF78(Actor* actor, GlobalContext* ctxt, int iParm3); // func_800EDF78
@@ -1657,13 +1657,13 @@ void func_800F1374(int param_1, short param_2); // func_800F1374
 void func_800F13E8(void); // func_800F13E8
 s16 func_800F1460(s16 param_1); // func_800F1460
 ActorCutscene* ActorCutscene_GetCutsceneImpl(s16 index); // func_800F14F8
-void ActorCutscene_Init(GlobalContext* ctxt, ActorCutscene* cutscenes, s32 num); // func_800F1544
+void ActorCutscene_Init(GlobalContext* ctxt, ActorCutscene* cutscenes, s16 num); // func_800F1544
 void func_800F15D8(Camera* camera); // func_800F15D8
 void ActorCutscene_ClearWaiting(void); // func_800F1648
 void ActorCutscene_ClearNextCutscenes(void); // func_800F1678
-void ActorCutscene_MarkNextCutscenes(void); // func_800F16A8
+s16 ActorCutscene_MarkNextCutscenes(void); // func_800F16A8
 void ActorCutscene_End(void); // func_800F17FC
-void ActorCutscene_Update(void); // func_800F1A7C
+s16 ActorCutscene_Update(void); // func_800F1A7C
 void ActorCutscene_SetIntentToPlay(s16 index); // func_800F1BA4
 s16 ActorCutscene_GetCanPlayNext(s16 index); // func_800F1BE4
 s16 ActorCutscene_StartAndSetUnkLinkFields(s16 index, Actor* actor); // func_800F1C68
@@ -1674,10 +1674,10 @@ s16 ActorCutscene_GetCurrentIndex(void); // func_800F207C
 ActorCutscene* ActorCutscene_GetCutscene(s16 index); // func_800F208C
 s16 ActorCutscene_GetAdditionalCutscene(s16 index); // func_800F20B8
 s16 ActorCutscene_GetLength(s16 index); // func_800F20F8
-void func_800F2138(void); // func_800F2138
-void func_800F2178(void); // func_800F2178
-s16 ActorCutscene_GetCurrentCamera(void); // func_800F21B8
-void func_800F21CC(void); // func_800F21CC
+s16 func_800F2138(s16 index); // func_800F2138
+s16 func_800F2178(s16 index); // func_800F2178
+s16 ActorCutscene_GetCurrentCamera(UNK_PTR a0); // func_800F21B8
+s16 func_800F21CC(void); // func_800F21CC
 UNK_TYPE4 func_800F22C4(short param_1, Actor* actor); // func_800F22C4
 void ActorCutscene_SetReturnCamera(s16 index); // func_800F23C4
 void func_800F23E0(UNK_TYPE1 param_1, UNK_TYPE1 param_2, UNK_TYPE1 param_3, UNK_TYPE1 param_4, UNK_TYPE4 param_5, UNK_TYPE4 param_6); // func_800F23E0
@@ -2940,7 +2940,7 @@ void func_80160AF8(void); // func_80160AF8
 void func_80160B40(void); // func_80160B40
 void func_80160B80(void); // func_80160B80
 void func_80160BC0(void); // func_80160BC0
-void ShrinkWindow_SetLetterboxTarget(s8 target); // func_80160C00
+void ShrinkWindow_SetLetterboxTarget(u8 target); // func_80160C00
 int ShrinkWindow_GetLetterboxTarget(void); // func_80160C14
 void ShrinkWindow_SetLetterboxMagnitude(s8 magnitude); // func_80160C28
 s32 ShrinkWindow_GetLetterboxMagnitude(void); // func_80160C3C

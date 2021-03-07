@@ -28,19 +28,6 @@
 #include <z64scene.h>
 
 typedef struct {
-    /* 0x0 */ s16 priority; // Lower means higher priority. -1 means it ignores priority
-    /* 0x2 */ s16 length;
-    /* 0x4 */ s16 unk4;
-    /* 0x6 */ s16 unk6;
-    /* 0x8 */ s16 additionalCutscene;
-    /* 0xA */ u8 sound;
-    /* 0xB */ u8 unkB;
-    /* 0xC */ s16 unkC;
-    /* 0xE */ u8 unkE;
-    /* 0xF */ u8 letterboxSize;
-} ActorCutscene; // size = 0x10
-
-typedef struct {
     /* 0x0 */ s16 polyStartIndex;
     /* 0x2 */ s16 ceilingNodeHead;
     /* 0x4 */ s16 wallNodeHead;
@@ -1251,6 +1238,31 @@ struct FileChooseContext {
 typedef struct AudioThreadStruct AudioThreadStruct;
 
 typedef struct GlobalContext GlobalContext;
+
+typedef struct {
+    /* 0x000 */ s16 actorCutsceneCurrent;
+    /* 0x002 */ s16 actorCutsceneCurrentLength;
+    /* 0x004 */ s16 actorCutsceneEnding;
+    /* 0x006 */ s16 actorCutsceneCurrentCamera;
+    /* 0x008 */ Actor* actorCutsceneCurrentCutsceneActor;
+    /* 0x00C */ s32 actorCutsceneStartMethod;
+    /* 0x010 */ GlobalContext* actorCutscenesGlobalCtxt;
+    /* 0x014 */ s16 actorCutsceneReturnCamera;
+    /* 0x016 */ s16 unk16;
+} ActorCutsceneManager; // size = 0x18
+
+typedef struct {
+    /* 0x0 */ s16 priority; // Lower means higher priority. -1 means it ignores priority
+    /* 0x2 */ s16 length;
+    /* 0x4 */ s16 unk4;
+    /* 0x6 */ s16 unk6;
+    /* 0x8 */ s16 additionalCutscene;
+    /* 0xA */ u8 sound;
+    /* 0xB */ u8 unkB;
+    /* 0xC */ s16 unkC;
+    /* 0xE */ u8 unkE;
+    /* 0xF */ u8 letterboxSize;
+} ActorCutscene; // size = 0x10
 
 typedef struct {
     /* 0x0 */ GlobalContext* ctxt;

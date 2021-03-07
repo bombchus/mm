@@ -926,15 +926,7 @@ extern UNK_TYPE1 D_801BC400; // D_801BC400
 extern UNK_TYPE1 D_801BC410; // D_801BC410
 extern UNK_TYPE1 D_801BC41E; // D_801BC41E
 extern ActorCutscene actorCutscenesGlobalCutscenes[8]; // D_801BD830
-extern s16 actorCutsceneCurrent; // D_801BD8B0
-extern s16 actorCutsceneCurrentLength; // D_801BD8B2
-extern s16 actorCutsceneEnding; // D_801BD8B4
-extern s16 actorCutsceneCurrentCamera; // D_801BD8B6
-extern Actor* actorCutsceneCurrentCutsceneActor; // D_801BD8B8
-extern UNK_TYPE4 actorCutsceneStartMethod; // D_801BD8BC
-extern GlobalContext* actorCutscenesGlobalCtxt; // D_801BD8C0
-extern s16 actorCutsceneReturnCamera; // D_801BD8C4
-extern s16 D_801BD8C6; // D_801BD8C6
+extern ActorCutsceneManager gActorCSMgr; // D_801BD8B0
 extern ColCylinderInit fireObjCollisionInit; // D_801BD8D0
 extern FireObjLightParams D_801BD8FC[2]; // D_801BD8FC
 extern GameStateOverlay initialGameStateInfo; // D_801BD910
