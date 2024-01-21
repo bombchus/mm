@@ -1,0 +1,53 @@
+<Soundfont Name="Soundfont_2" Index="2" Medium="MEDIUM_CART" CachePolicy="CACHE_LOAD_PERMANENT" SampleBank="assets/audio/samplebanks/SampleBank_0.xml">
+    <Envelopes>
+        <Envelope Name="Env0" Release="231">
+            <Point Delay="1" Arg="0"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="32700"/>
+        </Envelope>
+    </Envelopes>
+    <Samples>
+        <Sample Name="SAMPLE_0_0"/>
+        <Sample Name="SAMPLE_0_1"/>
+        <Sample Name="SAMPLE_0_2"/>
+        <Sample Name="SAMPLE_0_3"/>
+        <Sample Name="SAMPLE_0_4"/>
+        <Sample Name="SAMPLE_0_5"/>
+        <Sample Name="SAMPLE_0_6"/>
+        <Sample Name="SAMPLE_0_7"/>
+        <Sample Name="SAMPLE_0_8"/>
+        <Sample Name="SAMPLE_0_9"/>
+        <Sample Name="SAMPLE_0_10"/>
+        <Sample Name="SAMPLE_0_11"/>
+        <Sample Name="SAMPLE_0_12"/>
+        <Sample Name="SAMPLE_0_13"/>
+        <Sample Name="SAMPLE_0_14"/>
+        <Sample Name="SAMPLE_0_15"/>
+        <Sample Name="SAMPLE_0_16"/>
+        <Sample Name="SAMPLE_0_17"/>
+        <Sample Name="SAMPLE_0_18"/>
+        <Sample Name="SAMPLE_0_19"/>
+    </Samples>
+    <Instruments>
+        <Instrument ProgramNumber="1" Name="INST_1" Envelope="Env0" Sample="SAMPLE_0_0"/>
+        <Instrument ProgramNumber="2" Name="INST_2" Envelope="Env0" Sample="SAMPLE_0_1"/>
+        <Instrument ProgramNumber="3" Name="INST_3" Envelope="Env0" Sample="SAMPLE_0_2"/>
+        <Instrument ProgramNumber="4" Name="INST_4" Envelope="Env0" Sample="SAMPLE_0_3"/>
+        <Instrument ProgramNumber="5" Name="INST_5" Envelope="Env0" Sample="SAMPLE_0_4"/>
+        <Instrument ProgramNumber="6" Name="INST_6" Envelope="Env0" Sample="SAMPLE_0_5"/>
+        <Instrument ProgramNumber="7" Name="INST_7" Envelope="Env0" Sample="SAMPLE_0_6"/>
+        <Instrument ProgramNumber="8" Name="INST_8" Envelope="Env0" Sample="SAMPLE_0_7"/>
+        <Instrument ProgramNumber="9" Name="INST_9" Envelope="Env0" Sample="SAMPLE_0_8"/>
+        <Instrument ProgramNumber="10" Name="INST_10" Envelope="Env0" Sample="SAMPLE_0_18"/>
+        <Instrument ProgramNumber="11" Name="INST_11" Envelope="Env0" Sample="SAMPLE_0_9"/>
+        <Instrument ProgramNumber="12" Name="INST_12" Envelope="Env0" Sample="SAMPLE_0_10"/>
+        <Instrument ProgramNumber="13" Name="INST_13" Envelope="Env0" Sample="SAMPLE_0_11"/>
+        <Instrument ProgramNumber="14" Name="INST_14" Envelope="Env0" Sample="SAMPLE_0_19"/>
+        <Instrument ProgramNumber="15" Name="INST_15" Envelope="Env0" Sample="SAMPLE_0_13"/>
+        <Instrument ProgramNumber="16" Name="INST_16" Envelope="Env0" Sample="SAMPLE_0_17"/>
+        <Instrument ProgramNumber="17" Name="INST_17" Envelope="Env0" Sample="SAMPLE_0_14" BaseNote="AF2"/>
+        <Instrument ProgramNumber="18" Name="INST_18" Envelope="Env0" Sample="SAMPLE_0_15"/>
+        <Instrument ProgramNumber="19" Name="INST_19" Envelope="Env0" Sample="SAMPLE_0_12"/>
+        <Instrument ProgramNumber="20" Name="INST_20" Envelope="Env0" Sample="SAMPLE_0_16"/>
+    </Instruments>
+</Soundfont>

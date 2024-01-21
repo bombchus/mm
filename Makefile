@@ -63,7 +63,8 @@ VENV ?= .venv
 PYTHON ?= $(VENV)/$(VENV_BIN_DIR)/python3
 # Emulator w/ flags
 N64_EMULATOR ?=
-
+# Music Macro Language Version
+MML_VERSION := 1
 
 #### Setup ####
 
@@ -159,13 +160,25 @@ endif
 SCHC        := $(PYTHON) tools/buildtools/schc.py
 SCHC_FLAGS  :=
 
+# Audio tools
+AUDIO_EXTRACT := $(PYTHON) tools/audio/extraction/audio_extract.py
+Z64SAMPLE     := tools/audio/z64sample/z64sample-native --silent
+SBC           := tools/audio/sbc --matching
+SFC           := tools/audio/sfc --matching
+ELFPATCH      := tools/audio/elfpatch
+ATBLGEN       := tools/audio/atblgen
+AFILE_SIZES   := tools/audio/afile_sizes
+# We want linemarkers in sequence assembly files for better assembler error messages
+SEQ_CPP       := cpp -fno-dollars-in-identifiers
+SEQ_CPPFLAGS  := -D_LANGUAGE_ASEQ -DMML_VERSION=$(MML_VERSION) -I include/audio -I include/tables/sfx -I $(BUILD_DIR)/assets/soundfonts
+
 # Command to replace path variables in the spec file. We can't use the C
 # preprocessor for this because it won't substitute inside string literals.
 SPEC_REPLACE_VARS := sed -e 's|$$(BUILD_DIR)|$(BUILD_DIR)|g'
 
 CFLAGS           += -G 0 -non_shared -Xcpluscomm -nostdinc -Wab,-r4300_mul
 
-WARNINGS         := -fullwarn -verbose -woff 624,649,838,712,516,513,596,564,594
+WARNINGS         := -fullwarn -verbose -woff 624,649,838,712,516,513,596,564,594,807
 ASFLAGS          := -march=vr4300 -32 -G0
 GBI_DEFINES 	 := -DF3DEX_GBI_2 -DF3DEX_GBI_PL -DGBI_DOWHILE
 COMMON_DEFINES   := -D_MIPS_SZLONG=32 $(GBI_DEFINES)
@@ -210,8 +223,27 @@ $(shell mkdir -p asm data extracted)
 SRC_DIRS := $(shell find src -type d)
 ASM_DIRS := $(shell find asm -type d -not -path "asm/non_matchings*") $(shell find data -type d)
 
+AIFF_DIRS := $(shell find assets/samples -type d)
+AIFF_FILES := $(foreach dir,$(AIFF_DIRS),$(wildcard $(dir)/*.wav))
+AIFC_FILES := $(foreach f,$(AIFF_FILES),$(BUILD_DIR)/$(f:.wav=.aifc))
+
+SAMPLEBANK_DIRS := $(shell find assets/samplebanks -type d)
+SAMPLEBANK_XMLS := $(foreach dir,$(SAMPLEBANK_DIRS),$(wildcard $(dir)/*.xml))
+SAMPLEBANK_O_FILES := $(foreach f,$(SAMPLEBANK_XMLS),$(BUILD_DIR)/$(f:.xml=.o))
+
+SOUNDFONT_DIRS := $(shell find assets/soundfonts -type d)
+SOUNDFONT_XMLS := $(foreach dir,$(SOUNDFONT_DIRS),$(wildcard $(dir)/*.xml))
+SOUNDFONT_O_FILES := $(foreach f,$(SOUNDFONT_XMLS),$(BUILD_DIR)/$(f:.xml=.o))
+SOUNDFONT_HEADERS := $(foreach f,$(SOUNDFONT_XMLS),$(BUILD_DIR)/$(f:.xml=.h))
+
+SEQUENCE_DIRS := $(shell find assets/sequences -type d)
+SEQUENCE_FILES := $(foreach dir,$(SEQUENCE_DIRS),$(wildcard $(dir)/*.seq))
+SEQUENCE_O_FILES := $(foreach f,$(SEQUENCE_FILES:.seq=.o),$(BUILD_DIR)/$f)
+
+SEQUENCE_TABLE := include/tables/sequence_table.h
+
 ## Assets binaries (PNGs, JPGs, etc)
-ASSET_BIN_DIRS := $(shell find assets/* -type d -not -path "assets/xml*" -not -path "assets/c/*" -not -name "c" -not -path "assets/text")
+ASSET_BIN_DIRS := $(shell find assets/* -type d -not -path "assets/xml*" -not -path "assets/sequences" -not -path "assets/c/*" -not -name "c" -not -path "assets/text")
 # Prevents building C files that will be #include'd
 ASSET_BIN_DIRS_C_FILES := $(shell find assets/* -type d -not -path "assets/xml*" -not -path "assets/code*" -not -path "assets/overlays*")
 
@@ -249,10 +281,10 @@ LD_FILES := $(foreach f,$(shell find linker_scripts/*.ld),$(BUILD_DIR)/$f)
 DEP_FILES := $(O_FILES:.o=.asmproc.d) $(OVL_RELOC_FILES:.o=.d)
 
 # Other directories that need to be created in the build directory
-OTHER_DIRS := baserom dmadata linker_scripts
+OTHER_DIRS := baserom dmadata linker_scripts include/tables
 
 # create build directories
-$(shell mkdir -p $(foreach dir,$(SRC_DIRS) $(ASM_DIRS) $(ASSET_BIN_DIRS) $(ASSET_BIN_DIRS_C_FILES) $(OTHER_DIRS),$(BUILD_DIR)/$(dir)))
+$(shell mkdir -p $(foreach dir,$(SRC_DIRS) $(ASM_DIRS) $(ASSET_BIN_DIRS) $(ASSET_BIN_DIRS_C_FILES) $(OTHER_DIRS) $(AIFF_DIRS) $(SAMPLEBANK_DIRS) $(SOUNDFONT_DIRS) $(SEQUENCE_DIRS),$(BUILD_DIR)/$(dir)))
 
 # directory flags
 $(BUILD_DIR)/src/libultra/os/%.o: OPTFLAGS := -O1
@@ -329,7 +361,9 @@ $(ROMC): $(ROM) $(ELF) $(BUILD_DIR)/dmadata/compress_ranges.txt
 	$(PYTHON) tools/buildtools/compress.py --in $(ROM) --out $@ --dma-start `tools/buildtools/dmadata_start.sh $(NM) $(ELF)` --compress `cat $(BUILD_DIR)/dmadata/compress_ranges.txt` --threads $(N_THREADS)
 	$(PYTHON) -m ipl3checksum sum --cic 6105 --update $@
 
-$(ELF): $(TEXTURE_FILES_OUT) $(ASSET_FILES_OUT) $(O_FILES) $(OVL_RELOC_FILES) $(LDSCRIPT) $(LD_FILES)
+$(ELF): $(TEXTURE_FILES_OUT) $(ASSET_FILES_OUT) $(O_FILES) $(OVL_RELOC_FILES) $(LDSCRIPT) $(LD_FILES) \
+        $(AIFC_FILES) $(SAMPLEBANK_O_FILES) $(SOUNDFONT_O_FILES) $(SEQUENCE_O_FILES) \
+        $(BUILD_DIR)/assets/sequence_font_table.o
 	$(LD) -T $(LDSCRIPT) -T $(LD_FILES) --no-check-sections --accept-unknown-input-arch --emit-relocs -Map $(MAP) -o $@
 
 ## Order-only prerequisites 
@@ -359,10 +393,15 @@ assetclean:
 	$(RM) -r $(BUILD_DIR)/assets
 	$(RM) -r assets/text/*.h
 	$(RM) -r .extracted-assets.json
+	rm -rf assets/samplebanks
+	rm -rf assets/samples
+	rm -rf assets/soundfonts
+	find assets/sequences/oot -name "*.seq" -not -name "*.prg.seq" -type f | xargs rm -f
+	find assets/sequences/mm -name "*.seq" -not -name "*.prg.seq" -type f | xargs rm -f
 
 distclean: assetclean clean
 	$(RM) -r asm data extracted
-	$(MAKE) -C tools clean
+	$(MAKE) -C tools distclean
 
 venv:
 	test -d $(VENV) || python3 -m venv $(VENV) || { rm -rf $(VENV); false; }
@@ -375,6 +414,7 @@ setup:
 	$(PYTHON) tools/buildtools/decompress_baserom.py $(VERSION)
 	$(PYTHON) tools/buildtools/extract_baserom.py $(BASEROM_DIR)/baserom-decompressed.z64 -o $(EXTRACTED_DIR)/baserom --dmadata-start `cat $(BASEROM_DIR)/dmadata_start.txt` --dmadata-names $(BASEROM_DIR)/dmadata_names.txt
 	$(PYTHON) tools/buildtools/extract_yars.py $(VERSION)
+	$(AUDIO_EXTRACT) -r baserom_uncompressed.z64 -v mm_u0 --full --write-xml
 
 assets:
 	$(PYTHON) extract_assets.py -j $(N_THREADS) -Z Wno-hardcoded-pointer
@@ -495,6 +535,137 @@ $(BUILD_DIR)/assets/%.jpg.inc.c: assets/%.jpg
 
 $(BUILD_DIR)/%.schl.inc: %.schl
 	$(SCHC) $(SCHC_FLAGS) -o $@ $<
+
+# Audio
+
+# first build samples...
+
+$(BUILD_DIR)/assets/samples/%.half.aifc: assets/samples/%.half.wav
+	$(Z64SAMPLE) -t vadpcm-half $< $@
+# TESTING:
+#	@(cmp $(<D)/aifc/$(<F:.half.wav=.aifc) $@ && echo "$(<F) OK") || (mkdir -p NONMATCHINGS/$(<D) && cp $(<D)/aifc/$(<F:.half.wav=.aifc) NONMATCHINGS/$(<D)/$(<F:.half.wav=.aifc))
+
+$(BUILD_DIR)/assets/samples/%.aifc: assets/samples/%.wav
+	$(Z64SAMPLE) -t vadpcm $< $@
+# TESTING:
+#	@(cmp $(<D)/aifc/$(<F:.wav=.aifc) $@ && echo "$(<F) OK") || (mkdir -p NONMATCHINGS/$(<D) && cp $(<D)/aifc/$(<F:.wav=.aifc) NONMATCHINGS/$(<D)/$(<F:.wav=.aifc))
+
+# then assemble the samplebanks... TODO have sbc handle dependency generation?
+
+$(BUILD_DIR)/assets/samplebanks/%.o: assets/samplebanks/%.xml $(AIFC_FILES)
+	$(SBC) $< $(@:.o=.s)
+	$(AS) $(ASFLAGS) $(@:.o=.s) -o $@
+	$(OBJCOPY) -O binary -j.rodata $@ $(@:.o=.bin)
+# TESTING:
+#	@cmp $(@:.o=.bin) $(patsubst $(BUILD_DIR)/assets/samplebanks/%,baserom/audiotable_files/%,$(@:.o=.bin)) && echo "$(<F) OK"
+
+# also assemble the soundfonts and generate the associated headers... TODO have sfc handle dependency generation?
+
+.PRECIOUS: $(BUILD_DIR)/assets/soundfonts/%.c $(BUILD_DIR)/assets/soundfonts/%.h
+$(BUILD_DIR)/assets/soundfonts/%.c $(BUILD_DIR)/assets/soundfonts/%.h: assets/soundfonts/%.xml $(AIFC_FILES) $(SAMPLEBANK_XMLS)
+# This rule can be triggered for either the .c or .h file, so $@ may refer to either the .c or .h file. A simple
+# substitution $(@:.c=.h) will fail ~50% of the time with -j. Instead, don't assume anything about the suffix of $@.
+	$(SFC) $< $(@:$(suffix $(@F))=.c) $(@:$(suffix $(@F))=.h)
+
+$(BUILD_DIR)/assets/soundfonts/%.o: $(BUILD_DIR)/assets/soundfonts/%.c $(SAMPLEBANK_O_FILES)
+# compile c to unlinked object
+	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -I include/audio -o $(@:.o=.tmp) $<
+# partial link
+	@$(LD) -r -T include/audio/sf.ld $(@:.o=.tmp) -o $(@:.o=.tmp2)
+# patch defined symbols to be ABS symbols so that they remain file-relative offsets forever
+	@$(ELFPATCH) $(@:.o=.tmp2) $(@:.o=.tmp2)
+# write start and size symbols afterwards (TODO: source name shouldn't have to be the symbolic name..)
+# TODO have sfc write a SoundfontX.name file containing the symbolic name and then cat that file here?
+	@$(OBJCOPY) --add-symbol $(@F:.o=_Start)=.rodata:0,global --redefine-sym __LEN__=$(@F:.o=_Size) $(@:.o=.tmp2) $@
+# cleanup temp files
+	@$(RM) $(@:.o=.tmp) $(@:.o=.tmp2)
+# TESTING: link with samplebanks and dump binary
+#	$(LD) $(foreach f,$(SAMPLEBANK_O_FILES),-R $f) -T include/audio/sf.ld $@ -o $(@:.o=.elf)
+#	$(OBJCOPY) -O binary -j.rodata $(@:.o=.elf) $(@:.o=.bin)
+#	@(cmp $(@:.o=.bin) $(patsubst $(BUILD_DIR)/assets/soundfonts/%,baserom/audiobank_files/%,$(@:.o=.bin)) && echo "$(<F) OK" || (mkdir -p NONMATCHINGS/soundfonts && cp $(@:.o=.bin) NONMATCHINGS/soundfonts/$(@F:.o=.bin)))
+
+# then assemble the sequences... TODO would be nicer if these could depend only on the headers they contain instead
+# of all soundfont headers, cpp can do dependency generation so look into using that + move $(SOUNDFONT_HEADERS) to order-only?
+
+$(BUILD_DIR)/assets/sequences/%.o: assets/sequences/%.seq $(SOUNDFONT_HEADERS) include/audio/aseq.h include/audio/sequence_ids.h include/tables/sequence_table.h
+	$(SEQ_CPP) $(SEQ_CPPFLAGS) $< -o $(@:.o=.S)
+	$(AS) $(ASFLAGS) -I $(BUILD_DIR)/assets/soundfonts -I include/audio $(@:.o=.S) -o $@
+# TESTING:
+#	$(OBJCOPY) -O binary -j.data $@ $(@:.o=.aseq)
+#	@(cmp $(@:.o=.aseq) $(patsubst $(BUILD_DIR)/assets/sequences/%,baserom/audioseq_files/%,$(@:.o=.aseq)) && echo "$(<F) OK" || (mkdir -p NONMATCHINGS/sequences && cp $(@:.o=.aseq) NONMATCHINGS/sequences/$(@F:.o=.aseq)))
+
+# put together the tables
+
+$(BUILD_DIR)/assets/samplebank_table.h: $(SAMPLEBANK_XMLS)
+# TODO switch from dir to listing the files? Should do this to allow samplebank xmls to be sourced from several dirs
+	$(ATBLGEN) -banks $@ assets/samplebanks
+
+$(BUILD_DIR)/assets/soundfont_table.h: $(SOUNDFONT_XMLS)
+# TODO switch from dir to listing the files? Should do this to allow soundfont xmls to be sourced from several dirs
+	$(ATBLGEN) -fonts $@ assets/soundfonts
+
+SEQ_ORDER_DEFS := -DDEFINE_SEQUENCE_PTR\(name,seqId,_2,_3,_4,_5\)=PTR\(name,seqId\) \
+                  -DDEFINE_SEQUENCE\(name,seqId,_2,_3,_4,_5\)=\(name,seqId\)
+$(BUILD_DIR)/include/tables/sequence_order.in: $(SEQUENCE_TABLE)
+	$(CPP) $(CPPFLAGS) $< $(SEQ_ORDER_DEFS) -o $@
+
+$(BUILD_DIR)/assets/sequence_font_table.s: $(BUILD_DIR)/include/tables/sequence_order.in $(SEQUENCE_O_FILES)
+# TODO switch from dir to listing the files in sequence table order? Should do this to allow sequence xmls to be sourced from several dirs
+# would need some kind of validation that the files in the list actually exist.. (but we can do this in atblgen?)
+# the real problem is the sequence table only lists names, and names != filenames in general, we can add filename to the table but seems dumb
+	$(ATBLGEN) -sequences $@ $(BUILD_DIR)/include/tables/sequence_order.in $(BUILD_DIR)/assets/sequences
+
+# build the tables into objects, move data -> rodata
+
+$(BUILD_DIR)/src/audio/tables/samplebank_table.o: src/audio/tables/samplebank_table.c $(BUILD_DIR)/assets/samplebank_table.h
+	$(CC_CHECK) -I build -I $(BUILD_DIR)/assets $<
+	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -I build -I $(BUILD_DIR)/assets -o $(@:.o=.tmp) $<
+	@$(LD) -r -T include/audio/atbl_rdata.ld $(@:.o=.tmp) -o $@
+	@$(RM) $(@:.o=.tmp)
+	$(RM_MDEBUG)
+# TESTING:
+#	$(OBJCOPY) -O binary -j.rodata $@ $(@:.o=.bin)
+# Can't compare this due to pointers
+
+$(BUILD_DIR)/src/audio/tables/soundfont_table.o: src/audio/tables/soundfont_table.c $(BUILD_DIR)/assets/soundfont_table.h $(SOUNDFONT_HEADERS)
+	$(CC_CHECK) -I build -I $(BUILD_DIR)/assets $<
+	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -I build -I $(BUILD_DIR)/assets -o $(@:.o=.tmp) $<
+	@$(LD) -r -T include/audio/atbl_rdata.ld $(@:.o=.tmp) -o $@
+	@$(RM) $(@:.o=.tmp)
+	$(RM_MDEBUG)
+# TESTING:
+#	$(OBJCOPY) -O binary -j.rodata $@ $(@:.o=.bin)
+# Can't compare this due to pointers
+
+STRIP := $(MIPS_BINUTILS_PREFIX)strip
+
+$(BUILD_DIR)/src/audio/tables/sequence_table.o: src/audio/tables/sequence_table.c $(SEQUENCE_TABLE)
+	$(CC_CHECK) -I include/tables $<
+	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -I include/tables -o $(@:.o=.tmp) $<
+	@$(LD) -r -T include/audio/atbl_rdata.ld $(@:.o=.tmp) -o $@
+	@$(RM) $(@:.o=.tmp)
+	$(RM_MDEBUG)
+# TESTING:
+#	$(OBJCOPY) -O binary -j.rodata $@ $(@:.o=.bin)
+# Can't compare this due to pointers
+
+$(BUILD_DIR)/assets/sequence_font_table.o: $(BUILD_DIR)/assets/sequence_font_table.s
+	$(AS) $(ASFLAGS) $< -o $@
+# TESTING:
+#	$(OBJCOPY) -O binary -j.rodata $@ $(@:.o=.bin)
+#	@cmp $(@:.o=.bin) baserom/audio_code_tables/sequence_font_table.bin && echo "$(@F:.o=) OK"
+
+# make headers with file sizes and amounts
+
+$(BUILD_DIR)/src/audio/session_config.o: $(BUILD_DIR)/assets/soundfont_sizes.h $(BUILD_DIR)/assets/sequence_sizes.h
+
+$(BUILD_DIR)/assets/soundfont_sizes.h: $(SOUNDFONT_O_FILES)
+# TODO switch from dir to listing the files? Should do this to allow soundfont xmls to be sourced from several dirs
+	$(AFILE_SIZES) $@ $(BUILD_DIR)/assets/soundfonts NUM_SOUNDFONTS SOUNDFONT_SIZES
+
+$(BUILD_DIR)/assets/sequence_sizes.h: $(SEQUENCE_O_FILES)
+# TODO switch from dir to listing the files? Should do this to allow soundfont xmls to be sourced from several dirs
+	$(AFILE_SIZES) $@ $(BUILD_DIR)/assets/sequences NUM_SEQUENCES SEQUENCE_SIZES
 
 -include $(DEP_FILES)
 

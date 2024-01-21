@@ -1,0 +1,32 @@
+<Soundfont Name="Soundfont_24" Index="24" Medium="MEDIUM_CART" CachePolicy="CACHE_LOAD_TEMPORARY" SampleBank="assets/audio/samplebanks/SampleBank_0.xml" Indirect="1" LoopsHaveFrames="true">
+    <Envelopes>
+        <Envelope Name="Env0" Release="110">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="298" Arg="0"/>
+            <Point Delay="1" Arg="0"/>
+        </Envelope>
+        <Envelope Name="Env1" Release="211">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+    </Envelopes>
+    <Samples>
+        <Sample Name="SAMPLE_0_579" Cached="true"/>
+        <Sample Name="SAMPLE_0_580" Cached="true"/>
+        <Sample Name="SAMPLE_0_581" Cached="true"/>
+        <Sample Name="SAMPLE_0_582" Cached="true"/>
+        <Sample Name="SAMPLE_0_384" Cached="true"/>
+        <Sample Name="SAMPLE_0_583" Cached="true"/>
+    </Samples>
+    <Drums>
+        <Drum Name="DRUM_0" Envelope="Env0" Pan="18" NoteStart="A0" NoteEnd="C2" Sample="SAMPLE_0_579" BaseNote="D3"/>
+        <Drum Name="DRUM_1" Envelope="Env0" Pan="50" NoteStart="DF2" NoteEnd="D2" Sample="SAMPLE_0_580"/>
+        <Drum Name="DRUM_2" Envelope="Env0" Pan="54" NoteStart="EF2" NoteEnd="F2" Sample="SAMPLE_0_581" BaseNote="DF4"/>
+        <Drum Name="DRUM_3" Envelope="Env0" Pan="28" NoteStart="GF2" NoteEnd="F3" Sample="SAMPLE_0_582" BaseNote="F3"/>
+        <Drum Name="DRUM_4" Envelope="Env0" Pan="74" NoteStart="GF3" NoteEnd="C6" Sample="SAMPLE_0_384" BaseNote="GF2"/>
+    </Drums>
+    <Instruments>
+        <Instrument ProgramNumber="10" Name="INST_10" Envelope="Env1" Sample="SAMPLE_0_583"/>
+    </Instruments>
+</Soundfont>

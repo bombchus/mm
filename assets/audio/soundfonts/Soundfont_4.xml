@@ -1,0 +1,53 @@
+<Soundfont Name="Soundfont_4" Index="4" Medium="MEDIUM_CART" CachePolicy="CACHE_LOAD_TEMPORARY" SampleBank="assets/audio/samplebanks/SampleBank_0.xml" Indirect="1" LoopsHaveFrames="true">
+    <Envelopes>
+        <Envelope Name="Env0" Release="174">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="298" Arg="0"/>
+            <Point Delay="1" Arg="0"/>
+        </Envelope>
+        <Envelope Name="Env1" Release="236">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+        <Envelope Name="Env2" Release="239">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+        <Envelope Name="Env3" Release="0">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="298" Arg="12882"/>
+            <Point Delay="1" Arg="0"/>
+        </Envelope>
+        <Envelope Name="Env4" Release="225">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+    </Envelopes>
+    <Samples>
+        <Sample Name="SAMPLE_0_638" Cached="true"/>
+        <Sample Name="SAMPLE_0_639" Cached="true"/>
+        <Sample Name="SAMPLE_0_373" Cached="true"/>
+        <Sample Name="SAMPLE_0_607" Cached="true"/>
+        <Sample Name="SAMPLE_0_600" Cached="true"/>
+        <Sample Name="SAMPLE_0_379" Cached="true"/>
+        <Sample Name="SAMPLE_0_587" Cached="true"/>
+        <Sample Name="SAMPLE_0_380" Cached="true"/>
+        <Sample Name="SAMPLE_0_608" Cached="true"/>
+        <Sample Name="SAMPLE_0_609" Cached="true"/>
+    </Samples>
+    <Drums>
+        <Drum Name="DRUM_0" Envelope="Env3" Pan="59" NoteStart="A0" NoteEnd="B2" Sample="SAMPLE_0_379" BaseNote="BF1"/>
+        <Drum Name="DRUM_1" Envelope="Env3" Pan="71" NoteStart="C3" NoteEnd="DF3" Sample="SAMPLE_0_587"/>
+        <Drum Name="DRUM_2" Envelope="Env3" Pan="75" NoteStart="D3" NoteEnd="C6" Sample="SAMPLE_0_380"/>
+    </Drums>
+    <Instruments>
+        <Instrument ProgramNumber="0" Name="INST_0" Envelope="Env0" Sample="SAMPLE_0_639" RangeLo="G3" SampleLo="SAMPLE_0_638"/>
+        <Instrument ProgramNumber="1" Name="INST_1" Envelope="Env1" Sample="SAMPLE_0_373"/>
+        <Instrument ProgramNumber="2" Name="INST_2" Envelope="Env2" Sample="SAMPLE_0_607"/>
+        <Instrument ProgramNumber="3" Name="INST_3" Envelope="Env2" Sample="SAMPLE_0_600"/>
+        <Instrument ProgramNumber="12" Name="INST_12" Envelope="Env4" Sample="SAMPLE_0_608" RangeHi="E4" SampleHi="SAMPLE_0_609"/>
+    </Instruments>
+</Soundfont>

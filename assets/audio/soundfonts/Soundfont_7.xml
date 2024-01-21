@@ -1,0 +1,62 @@
+<Soundfont Name="Soundfont_7" Index="7" Medium="MEDIUM_CART" CachePolicy="CACHE_LOAD_TEMPORARY" SampleBank="assets/audio/samplebanks/SampleBank_0.xml" Indirect="1" LoopsHaveFrames="true">
+    <Envelopes>
+        <Envelope Name="Env0" Release="248">
+            <Point Delay="8" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+        <Envelope Name="Env1" Release="247">
+            <Point Delay="8" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+        <Envelope Name="Env2" Release="242">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="421" Arg="0"/>
+        </Envelope>
+        <Envelope Name="Env3" Release="180">
+            <Point Delay="32" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+        <Envelope Name="Env4" Release="235">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+        <Envelope Name="Env5" Release="246">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+        <Envelope Name="Env6" Release="248">
+            <Point Delay="2" Arg="32700"/>
+            <Point Delay="1" Arg="32700"/>
+            <Point Delay="32700" Arg="29430"/>
+        </Envelope>
+    </Envelopes>
+    <Samples>
+        <Sample Name="SAMPLE_0_376" Cached="true"/>
+        <Sample Name="SAMPLE_0_664" Cached="true"/>
+        <Sample Name="SAMPLE_0_665" Cached="true"/>
+        <Sample Name="SAMPLE_0_666" Cached="true"/>
+        <Sample Name="SAMPLE_0_597" Cached="true"/>
+        <Sample Name="SAMPLE_0_598" Cached="true"/>
+        <Sample Name="SAMPLE_0_599" Cached="true"/>
+        <Sample Name="SAMPLE_0_591" Cached="true"/>
+        <Sample Name="SAMPLE_0_667" Cached="true"/>
+    </Samples>
+    <Instruments>
+        <Instrument ProgramNumber="0" Name="INST_0" Envelope="Env0" Sample="SAMPLE_0_376"/>
+        <Instrument ProgramNumber="1" Name="INST_1" Envelope="Env1" Sample="SAMPLE_0_376"/>
+        <Instrument ProgramNumber="2" Name="INST_2" Envelope="Env2" Sample="SAMPLE_0_665" RangeLo="D3" SampleLo="SAMPLE_0_664" RangeHi="A4" SampleHi="SAMPLE_0_666"/>
+        <Instrument ProgramNumber="3" Name="INST_3" Envelope="Env3" Sample="SAMPLE_0_666" BaseNote="BF3"/>
+        <Instrument ProgramNumber="4" Name="INST_4" Envelope="Env3" Sample="SAMPLE_0_666" BaseNote="BF3"/>
+        <Instrument ProgramNumber="11" Name="INST_11" Envelope="Env4" Sample="SAMPLE_0_598" RangeLo="EF3" SampleLo="SAMPLE_0_597" RangeHi="DF4" SampleHi="SAMPLE_0_599"/>
+        <Instrument ProgramNumber="12" Name="INST_12" Envelope="Env4" Sample="SAMPLE_0_598" RangeLo="EF3" SampleLo="SAMPLE_0_597" RangeHi="DF4" SampleHi="SAMPLE_0_599"/>
+        <Instrument ProgramNumber="13" Name="INST_13" Envelope="Env5" Sample="SAMPLE_0_591"/>
+        <Instrument ProgramNumber="14" Name="INST_14" Envelope="Env5" Sample="SAMPLE_0_591"/>
+        <Instrument ProgramNumber="15" Name="INST_15" Envelope="Env6" Sample="SAMPLE_0_667"/>
+    </Instruments>
+</Soundfont>
