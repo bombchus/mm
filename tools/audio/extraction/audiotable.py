@@ -115,6 +115,8 @@ class AudioTableData:
 
 
 
+PCM16_SAMPLE_SIZE = 16
+
 class AudioTableSample(AudioTableData):
     """
     Sample in the Audiotable
@@ -133,6 +135,11 @@ class AudioTableSample(AudioTableData):
         self.sample_rate = None
         self.base_note = None
         self.tuning_map = None
+
+        if self.loop.count == 0:
+            # If a count is 0 the loop end must be the (bugged, vadpcm_enc computed it wrong originally) frame count
+            num_frames_bugged = (len(self.data) * PCM16_SAMPLE_SIZE) // self.frame_size()
+            assert self.loop.end ==  num_frames_bugged, f"{self.loop.end}, {num_frames_bugged}"
 
     def clone(self, start, end, padding):
         new_sample = AudioTableSample(start, end, self.header, self.data, self.book, self.loop, padding)
@@ -270,21 +277,21 @@ class AudioTableSample(AudioTableData):
         assert self.sample_rate is not None and self.base_note is not None,\
             f"The sample must have been assigned a samplerate and basenote to be extracted to AIFC: [0x{self.start:X}:0x{self.end:X}]\n{self.header}"
 
-        SAMPLE_SIZE = 16
         NUM_CHANNELS = 1
 
         # Note this computes the correct number of frames, The original sdk tool vadpcm_enc contained a bug where aifc
         # files would sometimes be 1-off in the reported number of frames. We do not reproduce this.
-        num_frames = (len(self.data) // self.frame_size()) * SAMPLE_SIZE
+        num_frames = (len(self.data) // self.frame_size()) * PCM16_SAMPLE_SIZE
 
         aifc = AIFCFile()
 
         aifc.add_section(b"COMM",
-            struct.pack(">hIh", NUM_CHANNELS, num_frames, SAMPLE_SIZE)
+            struct.pack(">hIh", NUM_CHANNELS, num_frames, PCM16_SAMPLE_SIZE)
             + AIFCFile.serialize_f80(self.sample_rate)
             + self.codec_id()
             + AIFCFile.pstring(self.codec_name())
         )
+
         aifc.add_section(b"INST",
             struct.pack(">bbbbbbhhhhhhh",
                 self.base_note_number(),
@@ -299,9 +306,14 @@ class AudioTableSample(AudioTableData):
                 0,0,0,  # release(mode,start,end)
             )
         )
+
         aifc.add_custom_section(b"VADPCMCODES", self.book.serialize())
-        if self.loop is not None:
+        if self.loop is not None and self.loop.count != 0:
+            # We don't need to write a VADPCMLOOPS chunk if the count is 0 as we can represent these by the absence of
+            # a VADPCMLOOPS chunk; a count of 0 indicates the sample has no loop, the start and end of a loop with
+            # count=0 are always 0 and the end of the sample respectively.
             aifc.add_custom_section(b"VADPCMLOOPS", self.loop.serialize())
+
         aifc.add_section(b"SSND", struct.pack(">II", 0, 0) + bytes(self.data))
 
         aifc.commit(outpath)

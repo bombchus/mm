@@ -14,7 +14,7 @@ from disassemble_sequence import MMLVersion, SqSection
 # ======================================================================================================================
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
-Z64SAMPLE_PATH = f"{SCRIPT_DIR}/../z64sample/z64sample-native"
+SAMPLECONV_PATH = f"{SCRIPT_DIR}/../sampleconv/sampleconv"
 
 # ======================================================================================================================
 #   Version Info

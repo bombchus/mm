@@ -97,10 +97,18 @@ class AdpcmLoop:
     """
 
     def __init__(self, data):
-        self.start, self.end, self.count, self.num_frames = struct.unpack(">IIiI", data[:0x10])
+        self.start, self.end, self.count, self.num_frames = struct.unpack(">IIII", data[:0x10])
+
+        # We expect loops to be either "no loop" or "infinite", as these are all that vadpcm_enc could handle.
+        assert self.count in (0,0xFFFFFFFF)
+
         if self.count != 0:
             self.state = tuple(s[0] for s in struct.iter_unpack(">h", data[0x10:0x30]))
         else:
+            # A count of 0 indicates "no loop", but a loop structure is mandatory for all samples so something had to
+            # be emitted. Ensure the start is at 0, later we will ensure that the end is at the last frame of the sample
+            # once we have the sample data.
+            assert self.start == 0
             self.state = tuple([0] * 16)
         assert len(self.state) == 16
 
@@ -110,7 +118,7 @@ class AdpcmLoop:
         """
         NUM_LOOPS = 1
 
-        return struct.pack(">HHIIi16h",
+        return struct.pack(">HHIII16h",
                            VADPCM_VERSTAMP, NUM_LOOPS,
                            self.start, self.end, self.count,
                            *self.state)

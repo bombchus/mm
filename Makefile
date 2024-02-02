@@ -162,7 +162,7 @@ SCHC_FLAGS  :=
 
 # Audio tools
 AUDIO_EXTRACT := $(PYTHON) tools/audio/extraction/audio_extract.py
-Z64SAMPLE     := tools/audio/z64sample/z64sample-native --silent
+SAMPLECONV    := tools/audio/sampleconv/sampleconv
 SBC           := tools/audio/sbc --matching
 SFC           := tools/audio/sfc --matching
 ELFPATCH      := tools/audio/elfpatch
@@ -540,12 +540,12 @@ $(BUILD_DIR)/%.schl.inc: %.schl
 # first build samples...
 
 $(BUILD_DIR)/assets/audio/samples/%.half.aifc: assets/audio/samples/%.half.wav
-	$(Z64SAMPLE) -t vadpcm-half $< $@
+	$(SAMPLECONV) vadpcm-half $< $@
 # TESTING:
-#	@(cmp $(<D)/aifc/$(<F:.half.wav=.aifc) $@ && echo "$(<F) OK") || (mkdir -p NONMATCHINGS/$(<D) && cp $(<D)/aifc/$(<F:.half.wav=.aifc) NONMATCHINGS/$(<D)/$(<F:.half.wav=.aifc))
+#	@(cmp $(<D)/aifc/$(<F:.half.wav=.half.aifc) $@ && echo "$(<F) OK") || (mkdir -p NONMATCHINGS/$(<D) && cp $(<D)/aifc/$(<F:.half.wav=.half.aifc) NONMATCHINGS/$(<D)/$(<F:.half.wav=.half.aifc))
 
 $(BUILD_DIR)/assets/audio/samples/%.aifc: assets/audio/samples/%.wav
-	$(Z64SAMPLE) -t vadpcm $< $@
+	$(SAMPLECONV) vadpcm $< $@
 # TESTING:
 #	@(cmp $(<D)/aifc/$(<F:.wav=.aifc) $@ && echo "$(<F) OK") || (mkdir -p NONMATCHINGS/$(<D) && cp $(<D)/aifc/$(<F:.wav=.aifc) NONMATCHINGS/$(<D)/$(<F:.wav=.aifc))
 

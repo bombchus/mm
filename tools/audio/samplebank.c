@@ -62,8 +62,7 @@ read_samplebank_xml(samplebank *sb, xmlDocPtr doc)
     size_t pointers_len = 0;
     sb->pointer_indices = malloc(pointers_cap * sizeof(int));
 
-    LL_FOREACH(xmlNodePtr, node, root->children)
-    {
+    LL_FOREACH(xmlNodePtr, node, root->children) {
         if (node->type != XML_ELEMENT_NODE)
             continue;
 

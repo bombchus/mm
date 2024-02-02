@@ -17,7 +17,7 @@ from disassemble_sequence import CMD_SPEC, SequenceDisassembler
 from util import align, debugm, error, incbin, program_get, XMLWriter
 
 from config import GAMEVERSION_ALL_OOT, VERSION_TABLE, GameVersionInfo
-from config import Z64SAMPLE_PATH
+from config import SAMPLECONV_PATH
 from config import AUDIOTABLE_BUFFER_BUGS, FAKE_BANKS
 from config import SEQ_DISAS_HACKS
 from config import HANDWRITTEN_SEQUENCES_OOT, HANDWRITTEN_SEQUENCES_MM
@@ -93,11 +93,12 @@ def collect_soundfonts(rom_image : memoryview, sound_font_table : AudioCodeTable
     return soundfonts
 
 def aifc_extract_one_sample(base_path : str, sample : AudioTableSample, n : int):
-    # export to AIFC
-    sample.to_file(f"{base_path}/aifc/Sample{n}.aifc")
-    # decode to AIFF/WAV
+    # print(f"SAMPLE {n}")
     half = ".half" if sample.header.codec == AudioSampleCodec.CODEC_SMALL_ADPCM else ""
-    out = program_get(f"{Z64SAMPLE_PATH} --matching {base_path}/aifc/Sample{n}.aifc {base_path}/Sample{n}{half}.wav")
+    # export to AIFC
+    sample.to_file(f"{base_path}/aifc/Sample{n}{half}.aifc")
+    # decode to AIFF/WAV
+    out = program_get(f"{SAMPLECONV_PATH} --matching pcm16 {base_path}/aifc/Sample{n}{half}.aifc {base_path}/Sample{n}{half}.wav")
     # TODO remove the AIFC? (after testing)
 
 def aifc_extract_one_bin(base_path : str, sample : AudioTableData):
@@ -344,8 +345,8 @@ def extract_with_full_analysis(version_name : str, rom_path : str, write_xml : b
     # Extract samplebank contents
     # ==================================================================================================================
 
-    # Check that the z64sample binary is available
-    assert os.path.isfile(Z64SAMPLE_PATH) , "Compile z64sample!!"
+    # Check that the sampleconv binary is available
+    assert os.path.isfile(SAMPLECONV_PATH) , "Compile sampleconv!!"
 
     with ThreadPool(processes=os.cpu_count()) as pool:
         for i,bank in enumerate(sample_banks):

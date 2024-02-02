@@ -306,8 +306,7 @@ xml_parse_node_by_spec(void *out, const xmlNodePtr node, const xml_attr_spec spe
     bool *got = alloca(spec_length * sizeof(bool));
     memset(got, false, spec_length * sizeof(bool));
 
-    LL_FOREACH(xmlAttrPtr, attr, node->properties)
-    {
+    LL_FOREACH(xmlAttrPtr, attr, node->properties) {
         const char *name = XMLSTR_TO_STR(attr->name);
         bool found = false;
 
@@ -343,16 +342,14 @@ xml_parse_node_by_spec(void *out, const xmlNodePtr node, const xml_attr_spec spe
 static void
 xml_print_rec(xmlNodePtr base, int *pIndent)
 {
-    LL_FOREACH(xmlNodePtr, node, base)
-    {
+    LL_FOREACH(xmlNodePtr, node, base) {
         if (node->type != XML_ELEMENT_NODE)
             continue;
 
         fprintf(stdout, "%*cChild is <%s> (%i)\n", *pIndent, ' ', node->name, node->type);
         *pIndent += 4;
 
-        LL_FOREACH(xmlAttrPtr, attr, node->properties)
-        {
+        LL_FOREACH(xmlAttrPtr, attr, node->properties) {
             xmlChar *value = xmlNodeListGetString(node->doc, attr->children, 1);
             fprintf(stdout, "%*c- Property <%s> \"%s\"\n", *pIndent, ' ', attr->name, XMLSTR_TO_STR(value));
             free(value);
@@ -370,8 +367,7 @@ xml_print_tree(xmlDocPtr document)
     int indent = 4;
     fprintf(stdout, "Root is <%s> (%i)\n", root->name, root->type);
 
-    LL_FOREACH(xmlAttrPtr, attr, root->properties)
-    {
+    LL_FOREACH(xmlAttrPtr, attr, root->properties) {
         xmlChar *value = xmlNodeListGetString(root->doc, attr->children, 1);
         fprintf(stdout, "%*c- Property <%s> \"%s\"\n", indent, ' ', attr->name, XMLSTR_TO_STR(value));
         free(value);

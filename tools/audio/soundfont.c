@@ -5,8 +5,7 @@
 envelope_data *
 sf_get_envelope(soundfont *sf, const char *name)
 {
-    LL_FOREACH(envelope_data *, env, sf->envelopes)
-    {
+    LL_FOREACH(envelope_data *, env, sf->envelopes) {
         if (env->points != NULL && strequ(name, env->name))
             return env;
     }
@@ -16,8 +15,7 @@ sf_get_envelope(soundfont *sf, const char *name)
 sample_data *
 sample_data_forname(soundfont *sf, const char *name)
 {
-    LL_FOREACH(sample_data *, sample, sf->samples)
-    {
+    LL_FOREACH(sample_data *, sample, sf->samples) {
         if (strequ(sample->name, name))
             return sample;
     }

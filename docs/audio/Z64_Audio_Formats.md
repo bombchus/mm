@@ -94,9 +94,9 @@ An AIFC file is structured in essentially the same way, however the `SSND` data 
 
 The data in the Audiotable is the `SSND` chunk of an AIFC file. In order to reconstruct the AIFC file, data from the Audiobank is also required to fill in the codebook and loops information.
 
-Decoding the AIFC file to AIFF can be accomplished using either `aifc_decode.c` or [z64sample](https://github.com/n64rankaisija/z64sample). As VADPCM is a lossy compression method, information from the original AIFF has been lost, the decoder finds decompressed data that re-compresses to matching through a brute-force method.
+Decoding the AIFC file to AIFF can be accomplished using either `aifc_decode.c` or [sampleconv](../../tools/audio/sampleconv). As VADPCM is a lossy compression method, information from the original AIFF has been lost, the decoder finds decompressed data that re-compresses to matching through a brute-force method.
 
-Converting AIFF to AIFC either uses two programs from the N64 SDK, `tabledesign` ([manual](http://n64devkit.square7.ch/n64man/tool/tabledesign.htm)) and `vadpcm_enc` ([manual](http://n64devkit.square7.ch/n64man/tool/vadpcm_enc.htm)), or [z64sample](https://github.com/n64rankaisija/z64sample). For the SDK tools, `tabledesign` generates the codebook which is passed to `vadpcm_enc` alongside the AIFF file to produce the AIFC file.
+Converting AIFF to AIFC either uses two programs from the N64 SDK, `tabledesign` ([manual](http://n64devkit.square7.ch/n64man/tool/tabledesign.htm)) and `vadpcm_enc` ([manual](http://n64devkit.square7.ch/n64man/tool/vadpcm_enc.htm)), or [sampleconv](../../tools/audio/sampleconv). For the SDK tools, `tabledesign` generates the codebook which is passed to `vadpcm_enc` alongside the AIFF file to produce the AIFC file.
 
 ### Table (gSampleBankTable)
 

@@ -17,16 +17,17 @@ XML_LDFLAGS := $(shell xml2-config --libs)
 .PHONY: all clean distclean format
 
 all: $(PROGRAMS)
-	$(MAKE) -C z64sample
+	$(MAKE) -C sampleconv
 
 clean:
 	$(RM) $(PROGRAMS)
 
 distclean: clean
-	$(MAKE) -C z64sample clean-all
+	$(MAKE) -C sampleconv distclean
 
 format:
 	$(CLANG_FORMAT) $(FORMAT_ARGS) $(shell find . -maxdepth 1 -type f -name "*.[ch]")
+	$(MAKE) -C sampleconv format
 
 afile_sizes: afile_sizes.c util.c
 	$(CC) $(CFLAGS) $(OPTFLAGS) $^ -o $@

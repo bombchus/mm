@@ -208,8 +208,7 @@ read_envelopes_info(soundfont *sf, xmlNodePtr envelopes)
         {"Index", false, xml_parse_s16, offsetof(envelope_point, arg)},
     };
 
-    LL_FOREACH(xmlNodePtr, env, envelopes->children)
-    {
+    LL_FOREACH(xmlNodePtr, env, envelopes->children) {
         if (env->type != XML_ELEMENT_NODE)
             continue;
 
@@ -238,16 +237,14 @@ read_envelopes_info(soundfont *sf, xmlNodePtr envelopes)
             // printf("Got Name=\"%s\" Release=(%d)\n", envdata->name, envdata->release);
 
             // ensure name is unique
-            LL_FOREACH(envelope_data *, envdata2, sf->envelopes)
-            {
+            LL_FOREACH(envelope_data *, envdata2, sf->envelopes) {
                 if (envdata2->name != NULL && strequ(envdata->name, envdata2->name))
                     error("Duplicate envelope name %s\n", envdata->name);
             }
 
             envelope_point *pts = (envelope_point *)(envdata + 1);
 
-            LL_FOREACH(xmlNodePtr, env_pt, env->children)
-            {
+            LL_FOREACH(xmlNodePtr, env_pt, env->children) {
                 if (points_num >= points_cap) {
                     points_cap *= 2;
                     envelopes_data =
@@ -349,8 +346,7 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
 
     int last_struct_index = 0;
 
-    LL_FOREACH(xmlNodePtr, instr_node, instrs->children)
-    {
+    LL_FOREACH(xmlNodePtr, instr_node, instrs->children) {
         if (instr_node->type != XML_ELEMENT_NODE)
             continue;
 
@@ -425,8 +421,7 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
             bool seen_mid = false;
             bool seen_high = false;
 
-            LL_FOREACH(xmlNodePtr, instr_sample_node, instr_node->children)
-            {
+            LL_FOREACH(xmlNodePtr, instr_sample_node, instr_node->children) {
                 if (instr_sample_node->type != XML_ELEMENT_NODE)
                     continue;
 
@@ -619,8 +614,7 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
         { "BaseNote",      true,  xml_parse_note_number,  offsetof(drum_data, base_note)     },
     };
 
-    LL_FOREACH(xmlNodePtr, drum_node, drums->children)
-    {
+    LL_FOREACH(xmlNodePtr, drum_node, drums->children) {
         if (drum_node->type != XML_ELEMENT_NODE)
             continue;
 
@@ -712,8 +706,7 @@ read_sfx_info(soundfont *sf, xmlNodePtr effects)
         { "BaseNote",   true,  xml_parse_note_number,  offsetof(sfx_data, base_note)  },
     };
 
-    LL_FOREACH(xmlNodePtr, eff, effects->children)
-    {
+    LL_FOREACH(xmlNodePtr, eff, effects->children) {
         if (eff->type != XML_ELEMENT_NODE)
             continue;
 
@@ -786,8 +779,7 @@ read_samples_info(soundfont *sf, xmlNodePtr samples)
     defaults.cached = false;
     xml_parse_node_by_spec(&defaults, samples, samples_spec, ARRAY_COUNT(samples_spec));
 
-    LL_FOREACH(xmlNodePtr, sample_node, samples->children)
-    {
+    LL_FOREACH(xmlNodePtr, sample_node, samples->children) {
         if (sample_node->type != XML_ELEMENT_NODE)
             continue;
 
@@ -959,8 +951,7 @@ emit_c_header(FILE *out, soundfont *sf)
         fprintf(out, "extern SoundEffect SF%d_SFX_LIST[];\n\n", sf->info.index);
 
     if (sf->instruments != NULL) {
-        LL_FOREACH(instr_data *, instr, sf->instruments)
-        {
+        LL_FOREACH(instr_data *, instr, sf->instruments) {
             if (instr->name == NULL)
                 continue;
             fprintf(out, "extern Instrument %s;\n", instr->name);
@@ -995,8 +986,7 @@ emit_c_header(FILE *out, soundfont *sf)
     if (sf->instruments != NULL) {
         fprintf(out, "NO_REORDER DATA Instrument* SF%d_INSTRUMENT_PTR_LIST[] = {\n", sf->info.index);
 
-        LL_FOREACH(instr_data *, instr, sf->instruments)
-        {
+        LL_FOREACH(instr_data *, instr, sf->instruments) {
             if (instr->unused)
                 continue; // Don't increment list size as nothing was written
 
@@ -1045,6 +1035,21 @@ codec_enum(uint32_t compression_type, const char *origin_file)
     __builtin_unreachable();
 }
 
+static unsigned int
+codec_frame_size(uint32_t compression_type)
+{
+    switch (compression_type) {
+        case CC4('A', 'D', 'P', '9'):
+            return 9;
+
+        case CC4('A', 'D', 'P', '5'):
+            return 5;
+
+        default: // TODO should any others not use 16?
+            return 16;
+    }
+}
+
 /**
  * Compare the codebooks of two samples. Returns true if they are identical.
  */
@@ -1073,16 +1078,14 @@ emit_c_samples(FILE *out, soundfont *sf)
         return size;
 
     int i = 0;
-    LL_FOREACH(sample_data *, sample, sf->samples)
-    {
+    LL_FOREACH(sample_data *, sample, sf->samples) {
         // Determine if we need to write a new book structure. If we've already emitted a book structure with the
         // same contents we use that instead.
 
         bool new_book = true;
         const char *bookname = sample->name;
 
-        LL_FOREACH(sample_data *, sample2, sf->samples)
-        {
+        LL_FOREACH(sample_data *, sample2, sf->samples) {
             if (sample2 == sample)
                 // Caught up to our current position, we need to write a new book.
                 break;
@@ -1124,7 +1127,8 @@ emit_c_samples(FILE *out, soundfont *sf)
                                                             "\n",
                 // clang-format on
                 sf->info.index, sample->name, 0, codec_name, sample->is_dd, BOOL_STR(sample->cached), BOOL_STR(false),
-                sample->aifc.ssnd_size, sf->sb.name, sample->name, sf->info.index, sample->name, sf->info.index, bookname);
+                sample->aifc.ssnd_size, sf->sb.name, sample->name, sf->info.index, sample->name, sf->info.index,
+                bookname);
         size += 0x10;
 
         // Write the book if it hasn't been deduplicated.
@@ -1142,7 +1146,8 @@ emit_c_samples(FILE *out, soundfont *sf)
                    "};"                                                                     "\n"
                    "NO_REORDER DATA AdpcmBookData SF%d_%s_BOOK_DATA = {"                    "\n",
                     // clang-format on
-                    sf->info.index, bookname, sample->aifc.book.order, sample->aifc.book.npredictors, sf->info.index, bookname);
+                    sf->info.index, bookname, sample->aifc.book.order, sample->aifc.book.npredictors, sf->info.index,
+                    bookname);
             book_size += 8;
 
             for (size_t j = 0; j < (unsigned)sample->aifc.book.order * (unsigned)sample->aifc.book.npredictors; j++) {
@@ -1176,12 +1181,35 @@ emit_c_samples(FILE *out, soundfont *sf)
 
         // Write the loop
 
+        // Can't use sample->aifc.num_frames directly, the original vadpcm_enc tool occasionally got the number
+        // of frames wrong (off-by-1) which we must reproduce here for matching (rather than reproducing it in the
+        // aifc and wav/aiff files themselves)
+        uint32_t frame_count = (sample->aifc.ssnd_size * 16) / codec_frame_size(sample->aifc.compression_type);
+
         // We cannot deduplicate or skip writing loops in general as the audio driver assumes that at least a loop
         // header exists for every sample. We could deduplicate on the special case that two samples have the same
         // frame count? TODO
 
         if (!sample->aifc.has_loop || sample->aifc.loop.count == 0) {
-            // Header only, using the same weak symbol trick as with books.
+            // No loop present, or a loop with a count of 0 was explicitly written into the aifc.
+            // Write a header only, using the same weak symbol trick as with books.
+
+            uint32_t start;
+            uint32_t end;
+            uint32_t count;
+
+            if (!sample->aifc.has_loop) {
+                // No loop, write a loop header that spans the entire sample with a count of 0.
+                // The audio driver expects that a loop structure always exists for a sample.
+                start = 0;
+                end = frame_count;
+                count = 0;
+            } else {
+                // There is a count=0 loop in the aifc file, trust it.
+                start = sample->aifc.loop.start;
+                end = sample->aifc.loop.end;
+                count = sample->aifc.loop.count;
+            }
 
             fprintf(out,
                     // clang-format off
@@ -1191,20 +1219,17 @@ emit_c_samples(FILE *out, soundfont *sf)
                    "#pragma weak SF%d_%s_LOOP = SF%d_%s_LOOP_HEADER"                        "\n"
                                                                                             "\n",
                     // clang-format on
-                    sf->info.index, sample->name,
-                    sample->aifc.loop.start, sample->aifc.loop.end, sample->aifc.loop.count,
-                    sf->info.index, sample->name,
-                    sf->info.index, sample->name);
+                    sf->info.index, sample->name, start, end, count, sf->info.index, sample->name, sf->info.index,
+                    sample->name);
             size += 0x10;
         } else {
             // With state, since loop states are a fixed size there is no need for a weak alias.
 
-            uint32_t frame_count = 0;
-            if (sf->info.loops_have_frames)
-                // Can't use sample->aifc.num_frames directly, the original vadpcm_enc tool occasionally got the number
-                // of frames wrong (off-by-1) which we must reproduce here for matching. The num_frames in the aifc file
-                // is correct however.
-                frame_count = sample->aifc.ssnd_size * 16 / 9;
+            // Some soundfonts include the total frame count of the sample, but not all of them.
+            // Set the frame count to 0 here to inhibit writing it into the loop structure if this is
+            // a soundfont that does not include it.
+            if (!sf->info.loops_have_frames)
+                frame_count = 0;
 
             char count_str[12];
 
@@ -1226,8 +1251,8 @@ emit_c_samples(FILE *out, soundfont *sf)
                    "};"                                                             "\n"
                                                                                     "\n",
                     // clang-format on
-                    sf->info.index, sample->name, sample->aifc.loop.start, sample->aifc.loop.end, count_str, frame_count,
-                    (uint16_t)sample->aifc.loop.state[0], (uint16_t)sample->aifc.loop.state[1],
+                    sf->info.index, sample->name, sample->aifc.loop.start, sample->aifc.loop.end, count_str,
+                    frame_count, (uint16_t)sample->aifc.loop.state[0], (uint16_t)sample->aifc.loop.state[1],
                     (uint16_t)sample->aifc.loop.state[2], (uint16_t)sample->aifc.loop.state[3],
                     (uint16_t)sample->aifc.loop.state[4], (uint16_t)sample->aifc.loop.state[5],
                     (uint16_t)sample->aifc.loop.state[6], (uint16_t)sample->aifc.loop.state[7],
@@ -1257,8 +1282,7 @@ emit_c_envelopes(FILE *out, soundfont *sf)
 
     size_t empty_num = 0;
 
-    LL_FOREACH(envelope_data *, envdata, sf->envelopes)
-    {
+    LL_FOREACH(envelope_data *, envdata, sf->envelopes) {
         if (envdata->name == NULL) {
             // For MM: write 16 bytes of 0
             // TODO ignore when nonmatching
@@ -1368,14 +1392,17 @@ emit_c_instruments(FILE *out, soundfont *sf)
                 sf->info.index, instr->envelope_name);
 
         if (instr->sample_low != NULL)
-            fprintf(out, "    { &SF%d_%s_HEADER, " F32_FMT "f },\n", sf->info.index, instr->sample_name_low, instr->sample_low_tuning);
+            fprintf(out, "    { &SF%d_%s_HEADER, " F32_FMT "f },\n", sf->info.index, instr->sample_name_low,
+                    instr->sample_low_tuning);
         else
             fprintf(out, "    INSTR_SAMPLE_NONE,\n");
 
-        fprintf(out, "    { &SF%d_%s_HEADER, " F32_FMT "f },\n", sf->info.index, instr->sample_name_mid, instr->sample_mid_tuning);
+        fprintf(out, "    { &SF%d_%s_HEADER, " F32_FMT "f },\n", sf->info.index, instr->sample_name_mid,
+                instr->sample_mid_tuning);
 
         if (instr->sample_high != NULL)
-            fprintf(out, "    { &SF%d_%s_HEADER, " F32_FMT "f },\n", sf->info.index, instr->sample_name_high, instr->sample_high_tuning);
+            fprintf(out, "    { &SF%d_%s_HEADER, " F32_FMT "f },\n", sf->info.index, instr->sample_name_high,
+                    instr->sample_high_tuning);
         else
             fprintf(out, "    INSTR_SAMPLE_NONE,\n");
 
@@ -1409,8 +1436,7 @@ emit_c_drums(FILE *out, soundfont *sf)
     // writing entries in the pointer table.
     int max_semitone = -1;
 
-    LL_FOREACH(drum_data *, drum, sf->drums)
-    {
+    LL_FOREACH(drum_data *, drum, sf->drums) {
         if (drum->name == NULL) {
             max_semitone++;
             continue;
@@ -1439,7 +1465,8 @@ emit_c_drums(FILE *out, soundfont *sf)
                 // clang-format on
                 drum->name,
                 drum->envelope->release, // TODO expose override
-                drum->pan, sf->info.index, drum->sample->name, sf->info.index, drum->envelope->name, drum->name, length);
+                drum->pan, sf->info.index, drum->sample->name, sf->info.index, drum->envelope->name, drum->name,
+                length);
 
         // Write each structure while building the drum pointer table
 
@@ -1517,10 +1544,10 @@ emit_c_effects(FILE *out, soundfont *sf)
 
     fprintf(out, "NO_REORDER DATA SoundEffect SF%d_SFX_LIST[] = {\n", sf->info.index);
 
-    LL_FOREACH(sfx_data *, sfx, sf->sfx)
-    {
+    LL_FOREACH(sfx_data *, sfx, sf->sfx) {
         if (sfx->sample != NULL)
-            fprintf(out, "    { { &SF%d_%s_HEADER, " F32_FMT "f } },\n", sf->info.index, sfx->sample->name, sfx->tuning);
+            fprintf(out, "    { { &SF%d_%s_HEADER, " F32_FMT "f } },\n", sf->info.index, sfx->sample->name,
+                    sfx->tuning);
         else
             fprintf(out, "    { { NULL, 0.0f } },\n");
 
@@ -1575,8 +1602,7 @@ emit_h_instruments(FILE *out, soundfont *sf)
     // #define FONT{Index}_INSTR_{EnumName} {EnumValue}
 
     int i = 0;
-    LL_FOREACH(instr_data *, instr, sf->instruments)
-    {
+    LL_FOREACH(instr_data *, instr, sf->instruments) {
         if (instr->name != NULL) {
             fprintf(out, "#define %s %d\n", instr->name, i);
         } else {
@@ -1659,8 +1685,7 @@ main(int argc, char **argv)
     sf.envelopes = sf.envelope_last = NULL;
 
     // read all envelopes first irrespective of their positioning in the xml
-    LL_FOREACH(xmlNodePtr, node, root->children)
-    {
+    LL_FOREACH(xmlNodePtr, node, root->children) {
         const char *name = XMLSTR_TO_STR(node->name);
 
         if (strequ(name, "Envelopes"))
@@ -1681,8 +1706,7 @@ main(int argc, char **argv)
 
     // read all samples
     sf.samples = NULL;
-    LL_FOREACH(xmlNodePtr, node, root->children)
-    {
+    LL_FOREACH(xmlNodePtr, node, root->children) {
         const char *name = XMLSTR_TO_STR(node->name);
 
         if (strequ(name, "Samples"))
@@ -1698,8 +1722,7 @@ main(int argc, char **argv)
     sf.instruments_struct_last = NULL;
     sf.drums = NULL;
     sf.sfx = NULL;
-    LL_FOREACH(xmlNodePtr, node, root->children)
-    {
+    LL_FOREACH(xmlNodePtr, node, root->children) {
         const char *name = XMLSTR_TO_STR(node->name);
 
         if (strequ(name, "Instruments"))
@@ -1712,8 +1735,7 @@ main(int argc, char **argv)
 
     // read match padding if it exists
     sf.match_padding = NULL;
-    LL_FOREACH(xmlNodePtr, node, root->children)
-    {
+    LL_FOREACH(xmlNodePtr, node, root->children) {
         const char *name = XMLSTR_TO_STR(node->name);
 
         if (strequ(name, "MatchPadding"))
