@@ -655,6 +655,9 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
             drum->semitone_start = drum->semitone_end = drum->semitone;
         }
 
+        if (drum->semitone_end < drum->semitone_start)
+            error("Invalid drum semitone range: %d - %d", drum->semitone_start, drum->semitone_end);
+
         drum->sample = sample_data_forname(sf, drum->sample_name);
         if (drum->sample == NULL)
             error("Bad sample name");
@@ -1470,11 +1473,11 @@ emit_c_drums(FILE *out, soundfont *sf)
 
         // Write each structure while building the drum pointer table
 
+        if (drum->semitone_end + 1 > 64)
+            error("Bad drum range");
+
         for (size_t note_offset = 0; note_offset < length; note_offset++) {
             size_t ptr_offset = drum->semitone_start + note_offset;
-
-            if (ptr_offset >= 64)
-                error("Bad drum range");
 
             ptr_table[ptr_offset].name = drum->name;
             ptr_table[ptr_offset].n = note_offset;
@@ -1613,16 +1616,68 @@ emit_h_instruments(FILE *out, soundfont *sf)
     fprintf(out, "\n");
 }
 
-void
-emit_h_drums(UNUSED FILE *out, UNUSED soundfont *sf)
+static const char *
+z64_note_name(int note_num)
 {
-    // TODO
+    static const char *const note_names[] = {
+        "A0",  "BF0", "B0",  "C1",  "DF1", "D1",  "EF1", "E1",   "F1",  "GF1",  "G1",  "AF1", "A1",     "BF1",   "B1",
+        "C2",  "DF2", "D2",  "EF2", "E2",  "F2",  "GF2", "G2",   "AF2", "A2",   "BF2", "B2",  "C3",     "DF3",   "D3",
+        "EF3", "E3",  "F3",  "GF3", "G3",  "AF3", "A3",  "BF3",  "B3",  "C4",   "DF4", "D4",  "EF4",    "E4",    "F4",
+        "GF4", "G4",  "AF4", "A4",  "BF4", "B4",  "C5",  "DF5",  "D5",  "EF5",  "E5",  "F5",  "GF5",    "G5",    "AF5",
+        "A5",  "BF5", "B5",  "C6",  "DF6", "D6",  "EF6", "E6",   "F6",  "GF6",  "G6",  "AF6", "A6",     "BF6",   "B6",
+        "C7",  "DF7", "D7",  "EF7", "E7",  "F7",  "GF7", "G7",   "AF7", "A7",   "BF7", "B7",  "C8",     "DF8",   "D8",
+        "EF8", "E8",  "F8",  "GF8", "G8",  "AF8", "A8",  "BF8",  "B8",  "C9",   "DF9", "D9",  "EF9",    "E9",    "F9",
+        "GF9", "G9",  "AF9", "A9",  "BF9", "B9",  "C10", "DF10", "D10", "EF10", "E10", "F10", "BFNEG1", "BNEG1", "C0",
+        "DF0", "D0",  "EF0", "E0",  "F0",  "GF0", "G0",  "AF0",
+    };
+    return note_names[note_num];
 }
 
 void
-emit_h_effects(UNUSED FILE *out, UNUSED soundfont *sf)
+emit_h_drums(FILE *out, soundfont *sf)
 {
-    // TODO
+    if (sf->drums == NULL)
+        return;
+
+    // Emit drum defines in groups, named like [DrumName]_[NoteName]
+    // e.g. a drum called "MY_DRUM" with a sample basenote of C4 covering a semitone range of 0..3 looks like
+    // #define MY_DRUM_C4  0
+    // #define MY_DRUM_DF4 1
+    // #define MY_DRUM_D4  2
+    // #define MY_DRUM_EF4 3
+
+    LL_FOREACH(drum_data *, drum, sf->drums) {
+        if (drum->name == NULL)
+            continue;
+
+        int length = drum->semitone_end - drum->semitone_start + 1;
+
+        for (int note_offset = 0; note_offset < length; note_offset++) {
+            // wrap note on overflow
+            int note = drum->base_note + note_offset;
+            if (note > 127)
+                note -= 128;
+
+            fprintf(out, "#define %s_%s %d\n", drum->name, z64_note_name(note), drum->semitone_start + note_offset);
+        }
+
+        fprintf(out, "\n");
+    }
+}
+
+void
+emit_h_effects(FILE *out, soundfont *sf)
+{
+    if (sf->sfx == NULL)
+        return;
+
+    int i = 0;
+    LL_FOREACH(sfx_data *, sfx, sf->sfx) {
+        if (sfx->sample != NULL)
+            fprintf(out, "#define %s %d\n", sfx->name, i);
+        i++;
+    }
+    fprintf(out, "\n");
 }
 
 NORETURN static void
