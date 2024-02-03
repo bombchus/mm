@@ -8,8 +8,7 @@
 #include "aifc.h"
 #include "util.h"
 
-#pragma GCC diagnostic ignored "-Wunused-value" // so GCC doesn't warn when debug prints are disabled
-#define DEBUGF (void)                           // printf
+#define DEBUGF(fmt, ...) (void)0
 
 typedef struct {
     uint32_t ckID;

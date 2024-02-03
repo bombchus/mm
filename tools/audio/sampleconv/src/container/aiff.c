@@ -238,7 +238,7 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
         chunk_size.value++;
         chunk_size.value &= ~1;
 
-        printf("%c%c%c%c\n", cc4[0], cc4[1], cc4[2], cc4[3]);
+        // printf("%c%c%c%c\n", cc4[0], cc4[1], cc4[2], cc4[3]);
 
         switch (CC4(cc4[0], cc4[1], cc4[2], cc4[3])) {
             case CC4('C', 'O', 'M', 'M'): {
@@ -259,7 +259,7 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
                 out->num_channels = comm.numChannels;
                 out->sample_rate = sample_rate;
                 out->bit_depth = comm.sampleSize;
-                out->num_samples = num_samples; // TODO hardcoded 16?
+                out->num_samples = num_samples;
 
                 switch (comp_type) {
                     case CC4('N', 'O', 'N', 'E'):
@@ -283,14 +283,14 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
                         break;
                 }
 
-                printf("comm: { %d, %u, %d, %g, \"%c%c%c%c\" }\n", comm.numChannels, num_samples, comm.sampleSize,
-                       sample_rate, comp_type >> 24, comp_type >> 16, comp_type >> 8, comp_type);
+                // printf("comm: { %d, %u, %d, %g, \"%c%c%c%c\" }\n", comm.numChannels, num_samples, comm.sampleSize,
+                //        sample_rate, comp_type >> 24, comp_type >> 16, comp_type >> 8, comp_type);
 
-                if (chunk_size.value > sizeof(aiff_COMM) + 4) {
-                    char compression_name[257];
-                    read_pstring(in, compression_name);
-                    printf("%s\n", compression_name);
-                }
+                // if (chunk_size.value > sizeof(aiff_COMM) + 4) {
+                //     char compression_name[257];
+                //     read_pstring(in, compression_name);
+                //     printf("%s\n", compression_name);
+                // }
                 has_comm = true;
             } break;
 
@@ -364,10 +364,10 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
                     }
                 }
 
-                printf("inst: { %d, %d, %d, %d, %d, %d, %d, { %d, %d, %d }, { %d, %d, %d } }\n", inst.baseNote,
-                       inst.detune, inst.lowNote, inst.highNote, inst.lowVelocity, inst.highVelocity, inst.gain,
-                       inst.sustainLoop.playMode, inst.sustainLoop.beginLoop, inst.sustainLoop.endLoop,
-                       inst.releaseLoop.playMode, inst.releaseLoop.beginLoop, inst.releaseLoop.endLoop);
+                // printf("inst: { %d, %d, %d, %d, %d, %d, %d, { %d, %d, %d }, { %d, %d, %d } }\n", inst.baseNote,
+                //        inst.detune, inst.lowNote, inst.highNote, inst.lowVelocity, inst.highVelocity, inst.gain,
+                //        inst.sustainLoop.playMode, inst.sustainLoop.beginLoop, inst.sustainLoop.endLoop,
+                //        inst.releaseLoop.playMode, inst.releaseLoop.beginLoop, inst.releaseLoop.endLoop);
 
                 has_inst = true;
             } break;
@@ -400,7 +400,7 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
                     case CC4('s', 't', 'o', 'c'): {
                         char chunk_name[257];
                         read_pstring(in, chunk_name);
-                        printf("APPL::stoc::%s\n", chunk_name);
+                        // printf("APPL::stoc::%s\n", chunk_name);
 
                         if (strequ(chunk_name, "VADPCMCODES")) {
                             int16_t_BE version;
@@ -465,7 +465,7 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
                 FREAD(in, &ssnd, sizeof(ssnd));
 
                 size_t data_size = chunk_size.value - sizeof(ssnd);
-                printf("ssnd: { %d, %d } size=%lu\n", ssnd.offset, ssnd.blockSize, data_size);
+                // printf("ssnd: { %d, %d } size=%lu\n", ssnd.offset, ssnd.blockSize, data_size);
 
                 void *data = MALLOC_CHECKED_INFO(data_size, "SSND chunk size = %lu", data_size);
                 FREAD(in, data, data_size);

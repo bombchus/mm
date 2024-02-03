@@ -25614,7 +25614,7 @@ CHAN_B644:
 /* 0xB646 [0x3F 0x06               ] */ stcio       15, IO_PORT_6
 CHAN_B648:
 /* 0xB648 [0xCB 0xB6 0xA0          ] */ ldseq       UNK_B6A0
-/* 0xB64B [0xC7 0x40 0xB6 0x5D     ] */ stseq       (NOTEDV_OPCODE | PITCH_A0), LAYER_B65D + STSEQ_NOTEDV_OPCODE_PITCH
+/* 0xB64B [0xC7 0x40 0xB6 0x5D     ] */ stseq       (NOTEDV_OPCODE | SF0_EFFECT_0), LAYER_B65D + STSEQ_NOTEDV_OPCODE_PITCH
 /* 0xB64F [0x66                    ] */ ldio        IO_PORT_6
 CHAN_B650:
 /* 0xB650 [0xCB 0xB6 0xA4          ] */ ldseq       UNK_B6A4
@@ -25626,7 +25626,7 @@ CHAN_B653:
 .layer LAYER_B65B
 /* 0xB65B [0xC2 0x00               ] */ transpose   0
 LAYER_B65D:
-/* 0xB65D [0x40 0x00 0x7F          ] */ notedv      PITCH_A0, 0, 127
+/* 0xB65D [0x40 0x00 0x7F          ] */ notedv      SF0_EFFECT_0, 0, 127
 /* 0xB660 [0xFF                    ] */ end
 
 .channel CHAN_B661
@@ -25646,7 +25646,7 @@ CHAN_B66E:
 /* 0xB674 [0xB4                    ] */ ptrtodyntbl
 /* 0xB675 [0xCC 0x00               ] */ ldi         0
 /* 0xB677 [0xB6                    ] */ dyntblv
-/* 0xB678 [0xC7 0x40 0xB6 0x5D     ] */ stseq       (NOTEDV_OPCODE | PITCH_A0), LAYER_B65D + STSEQ_NOTEDV_OPCODE_PITCH
+/* 0xB678 [0xC7 0x40 0xB6 0x5D     ] */ stseq       (NOTEDV_OPCODE | SF0_EFFECT_0), LAYER_B65D + STSEQ_NOTEDV_OPCODE_PITCH
 /* 0xB67C [0xCC 0x01               ] */ ldi         1
 /* 0xB67E [0xB6                    ] */ dyntblv
 /* 0xB67F [0xF4 0xD2               ] */ rjump       CHAN_B653
@@ -25848,7 +25848,7 @@ UNK_B7A4:
 /* 0xB7A9 [0xFF                    ] */ end
 
 .layer LAYER_B7AA
-/* 0xB7AA [0x78 0x00 0x00          ] */ notedv      PITCH_F5, 0, 0
+/* 0xB7AA [0x78 0x00 0x00          ] */ notedv      SF0_EFFECT_56, 0, 0
 /* 0xB7AD [0xFF                    ] */ end
 
 .channel CHAN_B7AE
@@ -25857,9 +25857,9 @@ UNK_B7A4:
 
 .layer LAYER_B7B2
 /* 0xB7B2 [0xC2 0x01               ] */ transpose   1
-/* 0xB7B4 [0x4D 0x80 0x83 0x64     ] */ notedv      PITCH_BF1, 131, 100
-/* 0xB7B8 [0x4E 0x7F 0x64          ] */ notedv      PITCH_B1, 127, 100
-/* 0xB7BB [0x4F 0x33 0x64          ] */ notedv      PITCH_C2, 51, 100
+/* 0xB7B4 [0x4D 0x80 0x83 0x64     ] */ notedv      SF0_EFFECT_13, 131, 100
+/* 0xB7B8 [0x4E 0x7F 0x64          ] */ notedv      SF0_EFFECT_14, 127, 100
+/* 0xB7BB [0x4F 0x33 0x64          ] */ notedv      SF0_EFFECT_15, 51, 100
 /* 0xB7BE [0xFF                    ] */ end
 
 .channel CHAN_B7BF
@@ -26079,7 +26079,7 @@ CHAN_B8E5:
 /* 0xB8EC [0x76                    ] */ stio        IO_PORT_6
 /* 0xB8ED [0xC9 0x01               ] */ and         1
 /* 0xB8EF [0xCB 0xB9 0x0B          ] */ ldseq       UNK_B90B
-/* 0xB8F2 [0xC7 0x40 0xB9 0x05     ] */ stseq       (NOTEDV_OPCODE | PITCH_A0), LAYER_B905 + STSEQ_NOTEDV_OPCODE_PITCH
+/* 0xB8F2 [0xC7 0x40 0xB9 0x05     ] */ stseq       (NOTEDV_OPCODE | SF0_EFFECT_0), LAYER_B905 + STSEQ_NOTEDV_OPCODE_PITCH
 /* 0xB8F6 [0xB8 0x02               ] */ rand        2
 /* 0xB8F8 [0xCB 0xB9 0x0D          ] */ ldseq       UNK_B90D
 /* 0xB8FB [0xC7 0x00 0xB9 0x07     ] */ stseq       0, LAYER_B905 + STSEQ_NOTEDV_VELOCITY_2
@@ -26089,7 +26089,7 @@ CHAN_B8E5:
 .layer LAYER_B903
 /* 0xB903 [0xC2 0x00               ] */ transpose   0
 LAYER_B905:
-/* 0xB905 [0x40 0x00 0x64          ] */ notedv      PITCH_A0, 0, 100
+/* 0xB905 [0x40 0x00 0x64          ] */ notedv      SF0_EFFECT_0, 0, 100
 /* 0xB908 [0xC0 0x30               ] */ ldelay      48
 /* 0xB90A [0xFF                    ] */ end
 
@@ -26209,9 +26209,9 @@ UNK_B9A1:
 
 .layer LAYER_B9AF
 /* 0xB9AF [0xC2 0x01               ] */ transpose   1
-/* 0xB9B1 [0x40 0x62 0x64          ] */ notedv      PITCH_A0, 98, 100
-/* 0xB9B4 [0x41 0x6A 0x64          ] */ notedv      PITCH_BF0, 106, 100
-/* 0xB9B7 [0x42 0x3A 0x64          ] */ notedv      PITCH_B0, 58, 100
+/* 0xB9B1 [0x40 0x62 0x64          ] */ notedv      SF0_EFFECT_0, 98, 100
+/* 0xB9B4 [0x41 0x6A 0x64          ] */ notedv      SF0_EFFECT_1, 106, 100
+/* 0xB9B7 [0x42 0x3A 0x64          ] */ notedv      SF0_EFFECT_2, 58, 100
 /* 0xB9BA [0xFF                    ] */ end
 
 .channel CHAN_B9BB
@@ -26245,10 +26245,10 @@ UNK_B9DC:
 
 .layer LAYER_B9E2
 /* 0xB9E2 [0xC2 0x01               ] */ transpose   1
-/* 0xB9E4 [0x43 0x81 0x0B 0x32     ] */ notedv      PITCH_C1, 267, 50
-/* 0xB9E8 [0x43 0x80 0xC5 0x32     ] */ notedv      PITCH_C1, 197, 50
-/* 0xB9EC [0x45 0x80 0x87 0x64     ] */ notedv      PITCH_D1, 135, 100
-/* 0xB9F0 [0x46 0x21 0x64          ] */ notedv      PITCH_EF1, 33, 100
+/* 0xB9E4 [0x43 0x81 0x0B 0x32     ] */ notedv      SF0_EFFECT_3, 267, 50
+/* 0xB9E8 [0x43 0x80 0xC5 0x32     ] */ notedv      SF0_EFFECT_3, 197, 50
+/* 0xB9EC [0x45 0x80 0x87 0x64     ] */ notedv      SF0_EFFECT_5, 135, 100
+/* 0xB9F0 [0x46 0x21 0x64          ] */ notedv      SF0_EFFECT_6, 33, 100
 /* 0xB9F3 [0xFF                    ] */ end
 
 .channel CHAN_B9F4
@@ -26257,9 +26257,9 @@ UNK_B9DC:
 
 .layer LAYER_B9F8
 /* 0xB9F8 [0xC2 0x01               ] */ transpose   1
-/* 0xB9FA [0x47 0x80 0xD9 0x64     ] */ notedv      PITCH_E1, 217, 100
-/* 0xB9FE [0x48 0x62 0x64          ] */ notedv      PITCH_F1, 98, 100
-/* 0xBA01 [0x49 0x81 0x09 0x64     ] */ notedv      PITCH_GF1, 265, 100
+/* 0xB9FA [0x47 0x80 0xD9 0x64     ] */ notedv      SF0_EFFECT_7, 217, 100
+/* 0xB9FE [0x48 0x62 0x64          ] */ notedv      SF0_EFFECT_8, 98, 100
+/* 0xBA01 [0x49 0x81 0x09 0x64     ] */ notedv      SF0_EFFECT_9, 265, 100
 /* 0xBA05 [0xFF                    ] */ end
 
 .channel CHAN_BA06
@@ -26267,7 +26267,7 @@ UNK_B9DC:
 /* 0xBA09 [0xFF                    ] */ end
 
 .layer LAYER_BA0A
-/* 0xBA0A [0x73 0x50 0x50          ] */ notedv      PITCH_C5, 80, 80
+/* 0xBA0A [0x73 0x50 0x50          ] */ notedv      SF0_EFFECT_51, 80, 80
 /* 0xBA0D [0xF4 0xFB               ] */ rjump       LAYER_BA0A
 
 .channel CHAN_BA0F
@@ -26276,9 +26276,9 @@ UNK_B9DC:
 
 .layer LAYER_BA13
 /* 0xBA13 [0xC2 0x01               ] */ transpose   1
-/* 0xBA15 [0x4A 0x41 0x64          ] */ notedv      PITCH_G1, 65, 100
-/* 0xBA18 [0x4B 0x81 0x0A 0x64     ] */ notedv      PITCH_AF1, 266, 100
-/* 0xBA1C [0x4C 0x53 0x64          ] */ notedv      PITCH_A1, 83, 100
+/* 0xBA15 [0x4A 0x41 0x64          ] */ notedv      SF0_EFFECT_10, 65, 100
+/* 0xBA18 [0x4B 0x81 0x0A 0x64     ] */ notedv      SF0_EFFECT_11, 266, 100
+/* 0xBA1C [0x4C 0x53 0x64          ] */ notedv      SF0_EFFECT_12, 83, 100
 /* 0xBA1F [0xFF                    ] */ end
 
 .channel CHAN_BA20
@@ -26295,7 +26295,7 @@ UNK_BA29:
 
 .layer LAYER_BA2F
 /* 0xBA2F [0xC2 0x01               ] */ transpose   1
-/* 0xBA31 [0x43 0x00 0x32          ] */ notedv      PITCH_C1, 0, 50
+/* 0xBA31 [0x43 0x00 0x32          ] */ notedv      SF0_EFFECT_3, 0, 50
 /* 0xBA34 [0xFF                    ] */ end
 
 .channel CHAN_BA35
@@ -26307,7 +26307,7 @@ CHAN_BA3B:
 /* 0xBA3E [0x76                    ] */ stio        IO_PORT_6
 /* 0xBA3F [0xC9 0x01               ] */ and         1
 /* 0xBA41 [0xCB 0xBA 0x5D          ] */ ldseq       UNK_BA5D
-/* 0xBA44 [0xC7 0x40 0xBA 0x57     ] */ stseq       (NOTEDV_OPCODE | PITCH_A0), LAYER_BA57 + STSEQ_NOTEDV_OPCODE_PITCH
+/* 0xBA44 [0xC7 0x40 0xBA 0x57     ] */ stseq       (NOTEDV_OPCODE | SF0_EFFECT_0), LAYER_BA57 + STSEQ_NOTEDV_OPCODE_PITCH
 /* 0xBA48 [0xB8 0x02               ] */ rand        2
 /* 0xBA4A [0xCB 0xBA 0x5F          ] */ ldseq       UNK_BA5F
 /* 0xBA4D [0xC7 0x00 0xBA 0x59     ] */ stseq       0, LAYER_BA57 + STSEQ_NOTEDV_VELOCITY_2
@@ -26317,7 +26317,7 @@ CHAN_BA3B:
 .layer LAYER_BA55
 /* 0xBA55 [0xC2 0x00               ] */ transpose   0
 LAYER_BA57:
-/* 0xBA57 [0x40 0x00 0x64          ] */ notedv      PITCH_A0, 0, 100
+/* 0xBA57 [0x40 0x00 0x64          ] */ notedv      SF0_EFFECT_0, 0, 100
 /* 0xBA5A [0xC0 0x30               ] */ ldelay      48
 /* 0xBA5C [0xFF                    ] */ end
 
@@ -26341,7 +26341,7 @@ UNK_BA6A:
 
 .layer LAYER_BA70
 /* 0xBA70 [0xC2 0x02               ] */ transpose   2
-/* 0xBA72 [0x49 0x00 0x05          ] */ notedv      PITCH_GF1, 0, 5
+/* 0xBA72 [0x49 0x00 0x05          ] */ notedv      SF0_EFFECT_9, 0, 5
 /* 0xBA75 [0xFF                    ] */ end
 
 .channel CHAN_BA76
@@ -26406,8 +26406,8 @@ UNK_BAC1:
 /* 0xBAC3 [0xCC 0x08               ] */ ldi         8
 /* 0xBAC5 [0x71                    ] */ stio        IO_PORT_1
 /* 0xBAC6 [0x64                    ] */ ldio        IO_PORT_SFX_INDEX
-/* 0xBAC7 [0xC8 0x50               ] */ sub         80
-/* 0xBAC9 [0xC7 0x19 0xBA 0xDC     ] */ stseq       (NOTEDVG_OPCODE | PITCH_BF2), LAYER_BADC + STSEQ_NOTEDVG_OPCODE_PITCH
+/* 0xBAC7 [0xC8 0x50               ] */ sub         NA_SE_VO_NARRATION_0 & 0xFF
+/* 0xBAC9 [0xC7 0x19 0xBA 0xDC     ] */ stseq       (NOTEDVG_OPCODE | SF0_EFFECT_25), LAYER_BADC + STSEQ_NOTEDVG_OPCODE_PITCH
 /* 0xBACD [0xCB 0xBA 0xE1          ] */ ldseq       UNK_BAE1
 /* 0xBAD0 [0xC7 0x00 0xBA 0xDE     ] */ stseq       0, LAYER_BADC + STSEQ_NOTEDVG_DELAY_LO
 /* 0xBAD4 [0x88 0xBA 0xDA          ] */ ldlayer     0, LAYER_BADA
@@ -26417,7 +26417,7 @@ UNK_BAC1:
 .layer LAYER_BADA
 /* 0xBADA [0xC2 0x01               ] */ transpose   1
 LAYER_BADC:
-/* 0xBADC [0x21 0x00 0x64 0x00     ] */ notedvg     PITCH_GF3, 0, 100, 0
+/* 0xBADC [0x21 0x00 0x64 0x00     ] */ notedvg     SF0_EFFECT_33, 0, 100, 0
 /* 0xBAE0 [0xFF                    ] */ end
 
 UNK_BAE1:
@@ -26429,8 +26429,8 @@ UNK_BAE1:
 /* 0xBB08 [0xCC 0x08               ] */ ldi         8
 /* 0xBB0A [0x71                    ] */ stio        IO_PORT_1
 /* 0xBB0B [0x64                    ] */ ldio        IO_PORT_SFX_INDEX
-/* 0xBB0C [0xC8 0x77               ] */ sub         119
-/* 0xBB0E [0xC7 0x00 0xBB 0x1F     ] */ stseq       (NOTEDVG_OPCODE | PITCH_A0), LAYER_BB1F + STSEQ_NOTEDVG_OPCODE_PITCH
+/* 0xBB0C [0xC8 0x77               ] */ sub         NA_SE_VO_Z1_OPENDOOR & 0xFF
+/* 0xBB0E [0xC7 0x00 0xBB 0x1F     ] */ stseq       (NOTEDVG_OPCODE | SF0_EFFECT_0), LAYER_BB1F + STSEQ_NOTEDVG_OPCODE_PITCH
 /* 0xBB12 [0xCB 0xBB 0x24          ] */ ldseq       UNK_BB24
 /* 0xBB15 [0xC7 0x00 0xBB 0x21     ] */ stseq       0, LAYER_BB1F + STSEQ_NOTEDVG_DELAY_LO
 /* 0xBB19 [0x88 0xBB 0x1D          ] */ ldlayer     0, LAYER_BB1D
@@ -26439,7 +26439,7 @@ UNK_BAE1:
 .layer LAYER_BB1D
 /* 0xBB1D [0xC2 0x02               ] */ transpose   2
 LAYER_BB1F:
-/* 0xBB1F [0x00 0x00 0x64 0x00     ] */ notedvg     PITCH_A0, 0, 100, 0
+/* 0xBB1F [0x00 0x00 0x64 0x00     ] */ notedvg     SF0_EFFECT_0, 0, 100, 0
 /* 0xBB23 [0xFF                    ] */ end
 
 UNK_BB24:
@@ -26451,7 +26451,7 @@ UNK_BB24:
 
 .layer LAYER_BB30
 /* 0xBB30 [0xC2 0x01               ] */ transpose   1
-/* 0xBB32 [0x49 0x80 0x00 0x64     ] */ noteldv     PITCH_GF1, 0, 100
+/* 0xBB32 [0x49 0x80 0x00 0x64     ] */ noteldv     SF0_EFFECT_9, 0, 100
 /* 0xBB36 [0xFF                    ] */ end
 
 .channel CHAN_BB37
@@ -26460,7 +26460,7 @@ UNK_BB24:
 
 .layer LAYER_BB3B
 /* 0xBB3B [0xC2 0x00               ] */ transpose   0
-/* 0xBB3D [0x5F 0x80 0x00 0x64     ] */ noteldv     PITCH_E3, 0, 100
+/* 0xBB3D [0x5F 0x80 0x00 0x64     ] */ noteldv     SF0_EFFECT_31, 0, 100
 /* 0xBB41 [0xFF                    ] */ end
 
 .channel CHAN_BB42
@@ -26481,7 +26481,7 @@ UNK_BB24:
 
 .layer LAYER_BB5D
 /* 0xBB5D [0xC2 0x00               ] */ transpose   0
-/* 0xBB5F [0x66 0x80 0x00 0x64     ] */ noteldv     PITCH_B3, 0, 100
+/* 0xBB5F [0x66 0x80 0x00 0x64     ] */ noteldv     SF0_EFFECT_38, 0, 100
 /* 0xBB63 [0xFF                    ] */ end
 
 .channel CHAN_BB64
@@ -26490,8 +26490,8 @@ UNK_BB24:
 
 .layer LAYER_BB68
 /* 0xBB68 [0xC2 0x00               ] */ transpose   0
-/* 0xBB6A [0x6D 0x80 0x00 0x64     ] */ noteldv     PITCH_GF4, 0, 100
-/* 0xBB6E [0x6E 0x80 0x00 0x64     ] */ noteldv     PITCH_G4, 0, 100
+/* 0xBB6A [0x6D 0x80 0x00 0x64     ] */ noteldv     SF0_EFFECT_45, 0, 100
+/* 0xBB6E [0x6E 0x80 0x00 0x64     ] */ noteldv     SF0_EFFECT_46, 0, 100
 /* 0xBB72 [0xFF                    ] */ end
 
 .channel CHAN_BB73
@@ -26500,7 +26500,7 @@ UNK_BB24:
 
 .layer LAYER_BB77
 /* 0xBB77 [0xC2 0x02               ] */ transpose   2
-/* 0xBB79 [0x4C 0x80 0x00 0x50     ] */ noteldv     PITCH_A1, 0, 80
+/* 0xBB79 [0x4C 0x80 0x00 0x50     ] */ noteldv     SF0_EFFECT_12, 0, 80
 /* 0xBB7D [0xFF                    ] */ end
 
 .channel CHAN_BB7E
@@ -26510,7 +26510,7 @@ UNK_BB24:
 .layer LAYER_BB82
 /* 0xBB82 [0xC2 0x02               ] */ transpose   2
 /* 0xBB84 [0xCB 0xBF 0x84 0xFB     ] */ env         ENVELOPE_BF84, 251
-/* 0xBB88 [0x4D 0x80 0x00 0x5F     ] */ noteldv     PITCH_BF1, 0, 95
+/* 0xBB88 [0x4D 0x80 0x00 0x5F     ] */ noteldv     SF0_EFFECT_13, 0, 95
 /* 0xBB8C [0xFF                    ] */ end
 
 .channel CHAN_BB8D
@@ -26519,7 +26519,7 @@ UNK_BB24:
 
 .layer LAYER_BB91
 /* 0xBB91 [0xC2 0x02               ] */ transpose   2
-/* 0xBB93 [0x4E 0x80 0x00 0x64     ] */ noteldv     PITCH_B1, 0, 100
+/* 0xBB93 [0x4E 0x80 0x00 0x64     ] */ noteldv     SF0_EFFECT_14, 0, 100
 /* 0xBB97 [0xFF                    ] */ end
 
 .channel CHAN_BB98
@@ -26528,7 +26528,7 @@ UNK_BB24:
 
 .layer LAYER_BB9C
 /* 0xBB9C [0xC2 0x02               ] */ transpose   2
-/* 0xBB9E [0x4F 0x80 0x00 0x64     ] */ noteldv     PITCH_C2, 0, 100
+/* 0xBB9E [0x4F 0x80 0x00 0x64     ] */ noteldv     SF0_EFFECT_15, 0, 100
 /* 0xBBA2 [0xFF                    ] */ end
 
 .channel CHAN_BBA3
@@ -26698,7 +26698,7 @@ UNK_BB24:
 
 .layer LAYER_BCA8
 /* 0xBCA8 [0xC2 0x03               ] */ transpose   3
-/* 0xBCAA [0x74 0x00 0x60          ] */ notedv      PITCH_DF5, 0, 96
+/* 0xBCAA [0x74 0x00 0x60          ] */ notedv      SF0_EFFECT_52, 0, 96
 /* 0xBCAD [0xFF                    ] */ end
 
 .channel CHAN_BCAE
@@ -26721,7 +26721,7 @@ UNK_BB24:
 .layer LAYER_BCC7
 /* 0xBCC7 [0xC2 0x03               ] */ transpose   3
 LAYER_BCC9:
-/* 0xBCC9 [0x73 0x50 0x50          ] */ notedv      PITCH_C5, 80, 80
+/* 0xBCC9 [0x73 0x50 0x50          ] */ notedv      SF0_EFFECT_51, 80, 80
 /* 0xBCCC [0xF4 0xFB               ] */ rjump       LAYER_BCC9
 
 .channel CHAN_BCCE
@@ -26737,7 +26737,7 @@ LAYER_BCC9:
 
 .layer LAYER_BCE1
 /* 0xBCE1 [0xC2 0x02               ] */ transpose   2
-/* 0xBCE3 [0x49 0x00 0x55          ] */ notedv      PITCH_GF1, 0, 85
+/* 0xBCE3 [0x49 0x00 0x55          ] */ notedv      SF0_EFFECT_9, 0, 85
 /* 0xBCE6 [0xFF                    ] */ end
 
 .channel CHAN_BCE7
@@ -26803,7 +26803,7 @@ LAYER_BCC9:
 
 .layer LAYER_BD41
 /* 0xBD41 [0xC2 0x03               ] */ transpose   3
-/* 0xBD43 [0x78 0x00 0x60          ] */ notedv      PITCH_F5, 0, 96
+/* 0xBD43 [0x78 0x00 0x60          ] */ notedv      SF0_EFFECT_56, 0, 96
 /* 0xBD46 [0xFF                    ] */ end
 
 .channel CHAN_BD47
@@ -26813,9 +26813,9 @@ LAYER_BCC9:
 
 .layer LAYER_BD4E
 /* 0xBD4E [0xC2 0x01               ] */ transpose   1
-/* 0xBD50 [0x40 0x62 0x64          ] */ notedv      PITCH_A0, 98, 100
-/* 0xBD53 [0x41 0x6A 0x64          ] */ notedv      PITCH_BF0, 106, 100
-/* 0xBD56 [0x42 0x3A 0x64          ] */ notedv      PITCH_B0, 58, 100
+/* 0xBD50 [0x40 0x62 0x64          ] */ notedv      SF0_EFFECT_0, 98, 100
+/* 0xBD53 [0x41 0x6A 0x64          ] */ notedv      SF0_EFFECT_1, 106, 100
+/* 0xBD56 [0x42 0x3A 0x64          ] */ notedv      SF0_EFFECT_2, 58, 100
 /* 0xBD59 [0xFF                    ] */ end
 
 .channel CHAN_BD5A
@@ -26891,7 +26891,7 @@ LAYER_BCC9:
 
 .layer LAYER_BDC5
 /* 0xBDC5 [0xC2 0x04               ] */ transpose   4
-/* 0xBDC7 [0x57 0x00 0x64          ] */ notedv      PITCH_AF2, 0, 100
+/* 0xBDC7 [0x57 0x00 0x64          ] */ notedv      SF0_EFFECT_23, 0, 100
 /* 0xBDCA [0xFF                    ] */ end
 
 .channel CHAN_BDCB
@@ -26900,7 +26900,7 @@ LAYER_BCC9:
 
 .layer LAYER_BDCF
 /* 0xBDCF [0xC2 0x04               ] */ transpose   4
-/* 0xBDD1 [0x54 0x00 0x64          ] */ notedv      PITCH_F2, 0, 100
+/* 0xBDD1 [0x54 0x00 0x64          ] */ notedv      SF0_EFFECT_20, 0, 100
 /* 0xBDD4 [0xFF                    ] */ end
 
 .channel CHAN_BDD5
@@ -26918,7 +26918,7 @@ LAYER_BCC9:
 .layer LAYER_BDE5
 /* 0xBDE5 [0xC2 0x04               ] */ transpose   4
 LAYER_BDE7:
-/* 0xBDE7 [0x51 0x50 0x64          ] */ notedv      PITCH_D2, 80, 100
+/* 0xBDE7 [0x51 0x50 0x64          ] */ notedv      SF0_EFFECT_17, 80, 100
 /* 0xBDEA [0xF4 0xFB               ] */ rjump       LAYER_BDE7
 
 .channel CHAN_BDEC
@@ -26943,7 +26943,7 @@ UNK_BE00:
 
 .layer LAYER_BE06
 /* 0xBE06 [0xC2 0x01               ] */ transpose   1
-/* 0xBE08 [0x63 0x18 0x64          ] */ notedv      PITCH_AF3, 24, 100
+/* 0xBE08 [0x63 0x18 0x64          ] */ notedv      SF0_EFFECT_35, 24, 100
 /* 0xBE0B [0xFF                    ] */ end
 
 .channel CHAN_BE0C
@@ -26952,7 +26952,7 @@ UNK_BE00:
 
 .layer LAYER_BE10
 /* 0xBE10 [0xC2 0x01               ] */ transpose   1
-/* 0xBE12 [0x63 0x00 0x64          ] */ notedv      PITCH_AF3, 0, 100
+/* 0xBE12 [0x63 0x00 0x64          ] */ notedv      SF0_EFFECT_35, 0, 100
 /* 0xBE15 [0xFF                    ] */ end
 
 .channel CHAN_BE16
@@ -26961,7 +26961,7 @@ UNK_BE00:
 
 .layer LAYER_BE1A
 /* 0xBE1A [0xC2 0x01               ] */ transpose   1
-/* 0xBE1C [0x64 0x14 0x73          ] */ notedv      PITCH_A3, 20, 115
+/* 0xBE1C [0x64 0x14 0x73          ] */ notedv      SF0_EFFECT_36, 20, 115
 /* 0xBE1F [0xFF                    ] */ end
 
 .channel CHAN_BE20
@@ -26970,7 +26970,7 @@ UNK_BE00:
 
 .layer LAYER_BE24
 /* 0xBE24 [0xC2 0x01               ] */ transpose   1
-/* 0xBE26 [0x64 0x00 0x73          ] */ notedv      PITCH_A3, 0, 115
+/* 0xBE26 [0x64 0x00 0x73          ] */ notedv      SF0_EFFECT_36, 0, 115
 /* 0xBE29 [0xFF                    ] */ end
 
 .channel CHAN_BE2A
@@ -26979,7 +26979,7 @@ UNK_BE00:
 
 .layer LAYER_BE2E
 /* 0xBE2E [0xC2 0x01               ] */ transpose   1
-/* 0xBE30 [0x67 0x14 0x69          ] */ notedv      PITCH_C4, 20, 105
+/* 0xBE30 [0x67 0x14 0x69          ] */ notedv      SF0_EFFECT_39, 20, 105
 /* 0xBE33 [0xFF                    ] */ end
 
 .channel CHAN_BE34
@@ -26988,7 +26988,7 @@ UNK_BE00:
 
 .layer LAYER_BE38
 /* 0xBE38 [0xC2 0x01               ] */ transpose   1
-/* 0xBE3A [0x66 0x00 0x73          ] */ notedv      PITCH_B3, 0, 115
+/* 0xBE3A [0x66 0x00 0x73          ] */ notedv      SF0_EFFECT_38, 0, 115
 /* 0xBE3D [0xFF                    ] */ end
 
 .channel CHAN_BE3E
@@ -26997,7 +26997,7 @@ UNK_BE00:
 
 .layer LAYER_BE42
 /* 0xBE42 [0xC2 0x01               ] */ transpose   1
-/* 0xBE44 [0x67 0x64 0x64          ] */ notedv      PITCH_C4, 100, 100
+/* 0xBE44 [0x67 0x64 0x64          ] */ notedv      SF0_EFFECT_39, 100, 100
 /* 0xBE47 [0xFF                    ] */ end
 
 .channel CHAN_BE48
@@ -27007,8 +27007,8 @@ UNK_BE00:
 
 .layer LAYER_BE4F
 /* 0xBE4F [0xC2 0x01               ] */ transpose   1
-/* 0xBE51 [0x25 0x62 0x64 0xC5     ] */ notedvg     PITCH_BF3, 98, 100, 197
-/* 0xBE55 [0x65 0x00 0x64          ] */ notedv      PITCH_BF3, 0, 100
+/* 0xBE51 [0x25 0x62 0x64 0xC5     ] */ notedvg     SF0_EFFECT_37, 98, 100, 197
+/* 0xBE55 [0x65 0x00 0x64          ] */ notedv      SF0_EFFECT_37, 0, 100
 /* 0xBE58 [0xFF                    ] */ end
 
 .channel CHAN_BE59
@@ -27022,7 +27022,7 @@ UNK_BE00:
 .layer LAYER_BE65
 /* 0xBE65 [0xC2 0x05               ] */ transpose   5
 LAYER_BE67:
-/* 0xBE67 [0x00 0x00 0x64 0x00     ] */ notedvg     PITCH_A0, 0, 100, 0
+/* 0xBE67 [0x00 0x00 0x64 0x00     ] */ notedvg     SF0_EFFECT_0, 0, 100, 0
 /* 0xBE6B [0xFF                    ] */ end
 
 .channel CHAN_BE6C
@@ -27039,7 +27039,7 @@ LAYER_BE67:
 .layer LAYER_BE81
 /* 0xBE81 [0xC2 0x06               ] */ transpose   6
 LAYER_BE83:
-/* 0xBE83 [0x00 0x00 0x64 0x00     ] */ notedvg     PITCH_A0, 0, 100, 0
+/* 0xBE83 [0x00 0x00 0x64 0x00     ] */ notedvg     SF0_EFFECT_0, 0, 100, 0
 /* 0xBE87 [0xFF                    ] */ end
 
 UNK_BE88:
@@ -27052,15 +27052,15 @@ UNK_BE88:
 /* 0xBEC8 [0xCC 0x08               ] */ ldi         8
 /* 0xBECA [0x71                    ] */ stio        IO_PORT_1
 /* 0xBECB [0x64                    ] */ ldio        IO_PORT_SFX_INDEX
-/* 0xBECC [0xC8 0x80               ] */ sub         128
-/* 0xBECE [0xC7 0x00 0xBE 0xD8     ] */ stseq       (NOTEDVG_OPCODE | PITCH_A0), LAYER_BED8 + STSEQ_NOTEDVG_OPCODE_PITCH
+/* 0xBECC [0xC8 0x80               ] */ sub         NA_SE_VO_OMVO03 & 0xFF
+/* 0xBECE [0xC7 0x00 0xBE 0xD8     ] */ stseq       (NOTEDVG_OPCODE | SF0_EFFECT_0), LAYER_BED8 + STSEQ_NOTEDVG_OPCODE_PITCH
 /* 0xBED2 [0x88 0xBE 0xD6          ] */ ldlayer     0, LAYER_BED6
 /* 0xBED5 [0xFF                    ] */ end
 
 .layer LAYER_BED6
 /* 0xBED6 [0xC2 0x07               ] */ transpose   7
 LAYER_BED8:
-/* 0xBED8 [0x00 0x00 0x64 0x00     ] */ notedvg     PITCH_A0, 0, 100, 0
+/* 0xBED8 [0x00 0x00 0x64 0x00     ] */ notedvg     SF0_EFFECT_0, 0, 100, 0
 /* 0xBEDC [0xFF                    ] */ end
 
 .channel CHAN_BEDD

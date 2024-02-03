@@ -152,13 +152,9 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
                 wav_fmt fmt;
                 FREAD(in, &fmt, sizeof(fmt));
 
-                printf("fmt : { %u, %u, %u, %u, %u, %u }\n", fmt.type, fmt.num_channels, fmt.sample_rate, fmt.byte_rate,
-                       fmt.block_align, fmt.bit_depth);
-
-                // assert(type == 1) // pcm
-                // assert(num_channels == 1) // mono
-                // assert(bit_depth == 16) // 16-bit samples
-                // assert(byte_rate == 2 * sample_rate) // ?
+                // printf("fmt : { %u, %u, %u, %u, %u, %u }\n", fmt.type, fmt.num_channels, fmt.sample_rate,
+                // fmt.byte_rate,
+                //        fmt.block_align, fmt.bit_depth);
 
                 switch (fmt.type) {
                     case WAVE_TYPE_PCM:
@@ -190,7 +186,7 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
                 wav_fact fact;
                 FREAD(in, &fact, sizeof(fact));
 
-                printf("fact: { %u }\n", fact.num_samples);
+                // printf("fact: { %u }\n", fact.num_samples);
 
                 out->num_samples = fact.num_samples;
 
@@ -198,7 +194,7 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
             } break;
 
             case CC4('d', 'a', 't', 'a'): {
-                printf("data: size=%u\n", chunk_size.value);
+                // printf("data: size=%u\n", chunk_size.value);
 
                 void *data = MALLOC_CHECKED_INFO(chunk_size.value, "data size = %u", chunk_size.value);
                 FREAD(in, data, chunk_size.value);
@@ -213,8 +209,8 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
                 wav_inst inst;
                 FREAD(in, &inst, sizeof(inst));
 
-                printf("inst: { %u, %u, %u, %u, %u, %u, %u }\n", inst.base_note, inst.fine_tune, inst.gain,
-                       inst.key_low, inst.key_hi, inst.vel_low, inst.vel_hi);
+                // printf("inst: { %u, %u, %u, %u, %u, %u, %u }\n", inst.base_note, inst.fine_tune, inst.gain,
+                //        inst.key_low, inst.key_hi, inst.vel_low, inst.vel_hi);
 
                 out->base_note = inst.base_note;
                 out->fine_tune = inst.fine_tune;
@@ -231,9 +227,9 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
                 wav_smpl smpl;
                 FREAD(in, &smpl, sizeof(smpl));
 
-                printf("smpl: { %u, %u, %u, %u, %u, %u, %u, %u, %u }\n", smpl.manufacturer, smpl.product,
-                       smpl.sample_period, smpl.unity_note, smpl.fine_tune, smpl.format, smpl.offset,
-                       smpl.num_sample_loops, smpl.sampler_data);
+                // printf("smpl: { %u, %u, %u, %u, %u, %u, %u, %u, %u }\n", smpl.manufacturer, smpl.product,
+                //        smpl.sample_period, smpl.unity_note, smpl.fine_tune, smpl.format, smpl.offset,
+                //        smpl.num_sample_loops, smpl.sampler_data);
 
                 // seems useless
                 // out->smpl.manufacturer = smpl.manufacturer;
@@ -256,8 +252,8 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
                         wav_loop loop;
                         FREAD(in, &loop, sizeof(loop));
 
-                        printf("    loop: { %u, %u, %u, %u, %u, %u }\n", loop.cue_point_index, loop.type, loop.start,
-                               loop.end, loop.fraction, loop.num);
+                        // printf("    loop: { %u, %u, %u, %u, %u, %u }\n", loop.cue_point_index, loop.type, loop.start,
+                        //        loop.end, loop.fraction, loop.num);
 
                         // out->loops[i].cue_point_index = loop.cue_point_index;
 
@@ -301,7 +297,7 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
                 FREAD(in, &order, sizeof(order));
                 FREAD(in, &npredictors, sizeof(npredictors));
 
-                printf("VADPCM book: order=%u npredictors=%u\n", order.value, npredictors.value);
+                // printf("VADPCM book: order=%u npredictors=%u\n", order.value, npredictors.value);
 
                 size_t book_size = VADPCM_BOOK_SIZE(order.value, npredictors.value);
                 size_t book_data_size = sizeof(int16_t) * book_size;
@@ -344,8 +340,8 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
                     out->vadpcm.loops[i].end = loop_end.value;
                     out->vadpcm.loops[i].count = loop_num.value;
 
-                    printf("VADPCM loop (start=%u, end=%u, num=%u)\n", loop_start.value, loop_end.value,
-                           loop_num.value);
+                    // printf("VADPCM loop (start=%u, end=%u, num=%u)\n", loop_start.value, loop_end.value,
+                    //        loop_num.value);
 
                     if (out->vadpcm.loops[i].count != 0) {
                         FREAD(in, out->vadpcm.loops[i].state, sizeof(out->vadpcm.loops[i].state));
@@ -354,15 +350,16 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
                             out->vadpcm.loops[i].state[j] = le16toh(out->vadpcm.loops[i].state[j]);
                         }
 
-                        printf("    LOOP STATE = { %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d }\n",
-                               out->vadpcm.loops[i].state[0], out->vadpcm.loops[i].state[1],
-                               out->vadpcm.loops[i].state[2], out->vadpcm.loops[i].state[3],
-                               out->vadpcm.loops[i].state[4], out->vadpcm.loops[i].state[5],
-                               out->vadpcm.loops[i].state[6], out->vadpcm.loops[i].state[7],
-                               out->vadpcm.loops[i].state[8], out->vadpcm.loops[i].state[9],
-                               out->vadpcm.loops[i].state[10], out->vadpcm.loops[i].state[11],
-                               out->vadpcm.loops[i].state[12], out->vadpcm.loops[i].state[13],
-                               out->vadpcm.loops[i].state[14], out->vadpcm.loops[i].state[15]);
+                        // printf("    LOOP STATE = { %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d,
+                        // %d }\n",
+                        //        out->vadpcm.loops[i].state[0], out->vadpcm.loops[i].state[1],
+                        //        out->vadpcm.loops[i].state[2], out->vadpcm.loops[i].state[3],
+                        //        out->vadpcm.loops[i].state[4], out->vadpcm.loops[i].state[5],
+                        //        out->vadpcm.loops[i].state[6], out->vadpcm.loops[i].state[7],
+                        //        out->vadpcm.loops[i].state[8], out->vadpcm.loops[i].state[9],
+                        //        out->vadpcm.loops[i].state[10], out->vadpcm.loops[i].state[11],
+                        //        out->vadpcm.loops[i].state[12], out->vadpcm.loops[i].state[13],
+                        //        out->vadpcm.loops[i].state[14], out->vadpcm.loops[i].state[15]);
                     }
                 }
             } break;
@@ -452,12 +449,11 @@ wav_write(container_data *in, const char *path, bool matching)
 
     wav_fmt fmt = {
         .type = fmt_type,
-        .num_channels = 1, //  in->num_channels,
+        .num_channels = in->num_channels,
         .sample_rate = in->sample_rate,
-        .byte_rate =
-            in->sample_rate * 2, //  in->byte_rate,          // byte_rate = sample_rate * num_channels * frame_size,
-        .block_align = 2,        //  in->block_align,        // block_align = num_channels * frame_size,
-        .bit_depth = 16,         //  in->bit_depth,
+        .byte_rate = in->sample_rate * (in->bit_depth / 8),
+        .block_align = in->num_channels * (in->bit_depth / 8),
+        .bit_depth = in->bit_depth,
     };
     CHUNK_BEGIN(out, "fmt ", &chunk_start);
     CHUNK_WRITE(out, &fmt);

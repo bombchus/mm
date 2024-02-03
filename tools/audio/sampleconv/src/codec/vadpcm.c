@@ -1022,15 +1022,11 @@ vadpcm_enc(container_data *ctnr, const codec_spec *codec, const enc_dec_opts *op
         ctnr->vadpcm.num_loops = nloops;
     }
 
-    printf("num=%u data_size=%lu\n", ctnr->num_samples, ctnr->data_size);
-
     ctnr->vadpcm.book_version = 1;
     if (!ctnr->vadpcm.has_book) {
         // If there is no prediction codebook embedded in the input file, design one for the data
-        printf("tabledesign..\n");
         tabledesign_run(&ctnr->vadpcm.book_header.order, &ctnr->vadpcm.book_header.npredictors, &ctnr->vadpcm.book_data,
                         ctnr->data, ctnr->num_samples, &opts->design);
-        printf("tabledesign DONE\n");
         ctnr->vadpcm.has_book = true;
     }
 
