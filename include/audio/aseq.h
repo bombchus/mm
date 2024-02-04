@@ -222,6 +222,7 @@
 #define STSEQ_FILTER_IDX                    1
 #define STSEQ_COMBFILTER_ARG1_HI            2
 #define STSEQ_NOTEDV_OPCODE_PITCH           0
+#define STSEQ_NOTEDV_DELAY                  1
 #define STSEQ_NOTEDV_DELAY_HI               1
 #define STSEQ_NOTEDV_DELAY_LO               2
 #define STSEQ_NOTEDV_VELOCITY               3
@@ -626,6 +627,14 @@ $reladdr\@:
     .else
         _section_invalid \cmd_name
     .endif
+.endm
+
+.macro .ptr value
+    _wr_lbl \value
+.endm
+
+.macro .ptr_raw value
+    _wr16 \value
 .endm
 
 
