@@ -13,60 +13,7 @@
 #include "xml.h"
 #include "util.h"
 
-/*
-audio_tablegen
-    Generate sample bank, soundfont and sequence font tables
-
-    Samplebank mode:
-        -banks -o [header_out] [dir]
-
-            Read in all supplied xml
-            Ensure they all have unique Index, including Pointer fields
-            Sort them by Index
-            Output header including Pointer
-
-    Soundfont mode:
-        -fonts -o [header_out] [dir]
-
-            Read in all supplied xml
-            Ensure they all have unique Index
-            Sort them by Index
-            Read the samplebank xmls pointed to by the soundfont xmls to get their index
-            Output header
-
-    Sequence mode:
-        -sequences -o [seq_font_tbl_out] [order] [dir]
-
-            Read in the sequence order
-            Read in all sequence elf files
-            Ensure there is an elf for each sequence name by checking elf symbols against sequence order
-            Read the .fonts sections of the elf files for the font table
-            Output sequence font table
-*/
-
-struct samplebank_file_info {
-    samplebank *samplebanks;
-    size_t num_files;
-};
-
-struct soundfont_file_info {
-    struct soundfont_file_info *next;
-    soundfont *soundfont;
-    int normal_bank_index;
-    int dd_bank_index;
-};
-
-struct sequences_file_info {
-    struct seqdata *file_data;
-    size_t num_files;
-};
-
-struct seqdata {
-    char *elf_path;
-    char *name;
-    uint32_t font_section_offset;
-    size_t font_section_size;
-};
+/* Utility */
 
 static bool
 is_xml(const char *path)
@@ -101,131 +48,136 @@ is_ofile(const char *path)
     return false;
 }
 
-static void
-read_sequence_elf_file(const char *path, struct sequences_file_info *file_info)
+/* Samplebanks */
+
+int
+tablegen_samplebanks(const char *sb_hdr_out, const char **samplebanks_paths, int num_samplebank_files)
 {
-    if (!is_ofile(path))
-        return;
+    samplebank *samplebanks = malloc(num_samplebank_files * sizeof(samplebank));
 
-    // printf("\"%s\"\n", path);
+    for (int i = 0; i < num_samplebank_files; i++) {
+        const char *path = samplebanks_paths[i];
 
-    // Open ELF file
+        if (!is_xml(path))
+            error("Not an xml file? (\"%s\")", path);
 
-    size_t data_size;
-    void *data = elf32_read(path, &data_size);
+        // printf("\"%s\"\n", path);
 
-    Elf32_Shdr *symtab = elf32_get_symtab(data, data_size);
-    if (symtab == NULL)
-        error("No symtab?");
-    Elf32_Shdr *shstrtab = elf32_get_shstrtab(data, data_size);
-    if (shstrtab == NULL)
-        error("No shstrtab?");
-    Elf32_Shdr *strtab = elf32_get_strtab(data, data_size);
-    if (symtab == NULL)
-        error("No strtab?");
+        // open xml
+        xmlDocPtr document = xmlReadFile(path, NULL, XML_PARSE_NONET);
+        if (document == NULL)
+            error("Could not read xml file \"%s\"\n", path);
 
-    Elf32_Shdr *font_section = elf32_section_forname(".fonts", shstrtab, data, data_size);
-    if (font_section == NULL)
-        error("No fonts defined?");
-
-    /*
-    uint8_t *font_data = GET_PTR(data, font_section->sh_offset);
-    size_t num_fonts = font_section->sh_size;
-
-    printf("[ ");
-    for (size_t i = 0; i < num_fonts; i++) {
-        printf("0x%02X ", font_data[i]);
+        // parse xml
+        read_samplebank_xml(&samplebanks[i], document);
     }
-    printf("]\n");
-    */
 
-    // Find the <name>_Start symbol
+    // find largest index
 
-    Elf32_Sym *sym = GET_PTR(data, symtab->sh_offset);
-    Elf32_Sym *sym_end = GET_PTR(data, symtab->sh_offset + symtab->sh_size);
+    size_t indices_max = 0;
 
-    char *seq_name = NULL;
+    for (int i = 0; i < num_samplebank_files; i++) {
+        samplebank *sb = &samplebanks[i];
+        unsigned index = sb->index;
+        if (index > indices_max)
+            indices_max = index;
 
-    for (size_t i = 0; sym < sym_end; sym++, i++) {
-        validate_read(symtab->sh_offset + i * sizeof(Elf32_Sym), sizeof(Elf32_Sym), data_size);
-
-        // The start symbol should be defined and global
-        int bind = sym->st_info >> 4;
-        if (bind != SB_GLOBAL || sym->st_shndx == SHN_UND) {
-            continue;
+        for (size_t j = 0; j < sb->num_pointers; j++) {
+            index = sb->pointer_indices[j];
+            if (index > indices_max)
+                indices_max = index;
         }
-
-        const char *sym_name = elf32_get_string(sym->st_name, strtab, data, data_size);
-        size_t name_len = strlen(sym_name);
-
-        if (name_len < 6) // _Start
-            continue;
-        if (sym_name[name_len - 6] != '_' || sym_name[name_len - 5] != 'S' || sym_name[name_len - 4] != 't' ||
-            sym_name[name_len - 3] != 'a' || sym_name[name_len - 2] != 'r' || sym_name[name_len - 1] != 't')
-            continue;
-
-        // Got start symbol
-        /*
-        printf("SYM [%d, %d, %d, %d, %d, %d] %s\n",
-               sym->st_value,       // value
-               sym->st_size,        // size
-               sym->st_info >> 4,   // bind
-               sym->st_info & 0xF,  // type
-               sym->st_other,       // ignore
-               sym->st_shndx,       // section index
-               sym_name);
-        */
-
-        // Save sequence name
-        seq_name = malloc(name_len - 6 + 1);
-        strncpy(seq_name, sym_name, name_len - 6);
-        seq_name[name_len - 6] = '\0';
-
-        /* printf("%s\n", seq_name); */
-        break;
     }
 
-    if (seq_name == NULL)
-        error("No start symbol?");
+    size_t indices_len = indices_max + 1;
 
-    size_t n = file_info->num_files;
+    // classify indices, sort cache policies, check that no two indices are the same
 
-    // TODO double alloc size for fast
-    file_info->num_files++;
-    file_info->file_data = realloc(file_info->file_data, file_info->num_files * sizeof(struct seqdata));
+#define INDEX_NONE      0
+#define INDEX_NOPOINTER 1
+#define INDEX_POINTER   2
 
-    // Populate new data
-    struct seqdata *seqdata = &file_info->file_data[n];
-    seqdata->elf_path = strdup(path);
-    seqdata->name = seq_name;
-    seqdata->font_section_offset = font_section->sh_offset;
-    seqdata->font_section_size = font_section->sh_size;
+    struct sb_index_info {
+        char index_type;
+        const char *name;
+        unsigned ptr_index;
+        const char *medium;
+        const char *cache_policy;
+    };
+    struct sb_index_info *index_info = calloc(indices_len, sizeof(struct sb_index_info));
 
-    free(data);
+    for (int i = 0; i < num_samplebank_files; i++) {
+        samplebank *sb = &samplebanks[i];
+        unsigned index = sb->index;
+
+        if (index_info[index].index_type != INDEX_NONE)
+            error("Overlapping indices");
+        index_info[index].index_type = INDEX_NOPOINTER;
+
+        index_info[index].name = sb->name;
+        index_info[index].medium = sb->medium;
+        index_info[index].cache_policy = sb->cache_policy;
+
+        unsigned real_index = index;
+
+        // Add pointers
+        for (size_t j = 0; j < sb->num_pointers; j++) {
+            index = sb->pointer_indices[j];
+
+            if (index_info[index].index_type != INDEX_NONE)
+                error("Overlapping indices");
+            index_info[index].index_type = INDEX_POINTER;
+
+            index_info[index].ptr_index = real_index;
+            index_info[index].medium = sb->medium;
+            index_info[index].cache_policy = sb->cache_policy;
+        }
+    }
+
+    // check that we have no gaps
+
+    for (size_t i = 0; i < indices_len; i++) {
+        if (index_info[i].index_type == INDEX_NONE) {
+            error("Missing index");
+        }
+    }
+
+    // emit table
+
+    FILE *out = fopen(sb_hdr_out, "w");
+    if (out == NULL)
+        error("Failed to open samplebank header output");
+
+    fprintf(out,
+            // clang-format off
+           "/**"                                                    "\n"
+           " * DEFINE_SAMPLE_BANK(name, medium, cachePolicy)"       "\n"
+           " * DEFINE_SAMPLE_BANK_PTR(name, medium, cachePolicy)"   "\n"
+           " */"                                                    "\n"
+            // clang-format on
+    );
+
+    for (size_t i = 0; i < indices_len; i++) {
+        if (index_info[i].index_type == INDEX_NOPOINTER) {
+            fprintf(out, "DEFINE_SAMPLE_BANK    (%s, %s, %s)\n", index_info[i].name, index_info[i].medium,
+                    index_info[i].cache_policy);
+        } else if (index_info[i].index_type == INDEX_POINTER) {
+            fprintf(out, "DEFINE_SAMPLE_BANK_PTR(%u, %s, %s)\n", index_info[i].ptr_index, index_info[i].medium,
+                    index_info[i].cache_policy);
+        } else {
+            assert(false);
+        }
+    }
+
+    fclose(out);
+
+    free(index_info);
+    free(samplebanks);
+
+    return EXIT_SUCCESS;
 }
 
-static void
-read_samplebank_xml_file(const char *path, struct samplebank_file_info *finfo)
-{
-    if (!is_xml(path))
-        return;
-
-    // printf("\"%s\"\n", path);
-
-    // open xml
-    xmlDocPtr document = xmlReadFile(path, NULL, XML_PARSE_NONET);
-    if (document == NULL)
-        error("Could not read xml file \"%s\"\n", path);
-
-    size_t n = finfo->num_files;
-    finfo->num_files++;
-    finfo->samplebanks = realloc(finfo->samplebanks, finfo->num_files * sizeof(samplebank));
-
-    samplebank *sb = &finfo->samplebanks[n];
-
-    // parse xml
-    read_samplebank_xml(sb, document);
-}
+/* Soundfonts */
 
 static int
 validate_samplebank_index(samplebank *sb, int ptr_idx)
@@ -249,71 +201,134 @@ validate_samplebank_index(samplebank *sb, int ptr_idx)
     }
 }
 
-static void
-read_soundfont_xml_file(const char *path, struct soundfont_file_info *finfo)
+int
+tablegen_soundfonts(const char *sf_hdr_out, const char **soundfonts_paths, int num_soundfont_files)
 {
-    if (!is_xml(path))
-        return;
+    soundfont *soundfonts = malloc(num_soundfont_files * sizeof(soundfont));
+    int max_index = 0;
 
-    // printf("\"%s\"\n", path);
+    for (int i = 0; i < num_soundfont_files; i++) {
+        const char *path = soundfonts_paths[i];
 
-    xmlDocPtr document = xmlReadFile(path, NULL, XML_PARSE_NONET);
-    if (document == NULL)
-        error("Could not read xml file \"%s\"\n", path);
+        if (!is_xml(path))
+            error("Not an xml file? (\"%s\")", path);
 
-    xmlNodePtr root = xmlDocGetRootElement(document);
-    if (!strequ(XMLSTR_TO_STR(root->name), "Soundfont"))
-        error("Root node must be <Soundfont>");
+        xmlDocPtr document = xmlReadFile(path, NULL, XML_PARSE_NONET);
+        if (document == NULL)
+            error("Could not read xml file \"%s\"\n", path);
 
-    soundfont *sf = malloc(sizeof(soundfont));
+        xmlNodePtr root = xmlDocGetRootElement(document);
+        if (!strequ(XMLSTR_TO_STR(root->name), "Soundfont"))
+            error("Root node must be <Soundfont>");
 
-    read_soundfont_info(sf, root);
+        soundfont *sf = &soundfonts[i];
 
-    // printf("Name: %s\n", sf->info.name);
-    // printf("Medium: %s\n", sf->info.medium);
-    // printf("CachePolicy: %s\n", sf->info.cache_policy);
-    // printf("SampleBankNormal (Path): %s\n", sf->info.bank_path);
-    // printf("Pointer index: %d\n", sf->info.pointer_index);
-    // printf("SampleBankDD (Path): %s\n", sf->info.bank_path_dd);
+        read_soundfont_info(sf, root);
 
-    // Resolve samplebank indices
-
-    int normal_idx = validate_samplebank_index(&sf->sb, sf->info.pointer_index);
-
-    int dd_idx = 255;
-    if (sf->info.bank_path_dd != NULL)
-        dd_idx = validate_samplebank_index(&sf->sbdd, sf->info.pointer_index); // TODO pointer_index_dd
-
-    // Build a linked list, insertion-sort based on sf->info.index, error on duplicates
-
-    struct soundfont_file_info *link = malloc(sizeof(struct soundfont_file_info));
-    link->soundfont = sf;
-    link->normal_bank_index = normal_idx;
-    link->dd_bank_index = dd_idx;
-
-    if (finfo->next == NULL) {
-        // First
-        link->next = NULL;
-        finfo->next = link;
-    } else {
-        struct soundfont_file_info *finfo_prev = finfo;
-        finfo = finfo->next;
-
-        while (finfo != NULL) {
-            if (finfo->soundfont->info.index == sf->info.index) {
-                error("Duplicate soundfont indices");
-            }
-            if (finfo->soundfont->info.index > sf->info.index) {
-                break;
-            }
-            finfo_prev = finfo;
-            finfo = finfo->next;
-        }
-
-        // either reached the end or at the sort position, insert new link
-        finfo_prev->next = link;
-        link->next = finfo;
+        if (sf->info.index > max_index)
+            max_index = sf->info.index;
     }
+
+    struct soundfont_file_info {
+        soundfont *soundfont;
+        int normal_bank_index;
+        int dd_bank_index;
+    };
+    struct soundfont_file_info *finfo = calloc(max_index + 1, sizeof(struct soundfont_file_info));
+
+    for (int i = 0; i < num_soundfont_files; i++) {
+        soundfont *sf = &soundfonts[i];
+
+        // Resolve samplebank indices
+
+        int normal_idx = validate_samplebank_index(&sf->sb, sf->info.pointer_index);
+
+        int dd_idx = 255;
+        if (sf->info.bank_path_dd != NULL)
+            dd_idx = validate_samplebank_index(&sf->sbdd, sf->info.pointer_index); // TODO pointer_index_dd
+
+        // Add info
+
+        if (finfo[sf->info.index].soundfont != NULL)
+            error("Duplicate soundfont indices");
+
+        finfo[sf->info.index].soundfont = &soundfonts[i];
+        finfo[sf->info.index].normal_bank_index = normal_idx;
+        finfo[sf->info.index].dd_bank_index = dd_idx;
+    }
+
+    // Make sure there are no gaps
+    for (int i = 0; i < max_index + 1; i++) {
+        if (finfo[i].soundfont == NULL)
+            error("No soundfont for index %d", i);
+    }
+
+    FILE *out = fopen(sf_hdr_out, "w");
+
+    fprintf(out,
+            // clang-format off
+           "/**"                                                                    "\n"
+           " * DEFINE_SOUNDFONT(name, medium, cachePolicy, sampleBankNormal, "
+                               "sampleBankDD, nInstruments, nDrums, nSfx)"          "\n"
+           " */"                                                                    "\n"
+            // clang-format on
+    );
+
+    for (int i = 0; i < max_index + 1; i++) {
+        soundfont *sf = finfo[i].soundfont;
+
+        fprintf(out, "DEFINE_SOUNDFONT(%s, %s, %s, %d, %d, SF%d_NUM_INSTRUMENTS, SF%d_NUM_DRUMS, SF%d_NUM_SFX)\n",
+                sf->info.name, sf->info.medium, sf->info.cache_policy, finfo[i].normal_bank_index,
+                finfo[i].dd_bank_index, sf->info.index, sf->info.index, sf->info.index);
+    }
+
+    fclose(out);
+
+    free(soundfonts);
+    free(finfo);
+
+    return EXIT_SUCCESS;
+}
+
+/* Sequences */
+
+struct seqdata {
+    char *elf_path;
+    char *name;
+    uint32_t font_section_offset;
+    size_t font_section_size;
+};
+
+static void
+gen_sequence_font_table(FILE *out, struct seqdata **sequences, size_t num_sequences)
+{
+    fprintf(out,
+            // clang-format off
+                                            "\n"
+           ".section .rodata"               "\n"
+                                            "\n"
+           ".global gSequenceFontTable"     "\n"
+           "gSequenceFontTable:"            "\n"
+            // clang-format on
+    );
+
+    for (size_t i = 0; i < num_sequences; i++) {
+        fprintf(out, "    .half Fonts_%lu - gSequenceFontTable\n", i);
+    }
+    fprintf(out, "\n");
+
+    for (size_t i = 0; i < num_sequences; i++) {
+        fprintf(out,
+                // clang-format off
+               "Fonts_%lu:"                         "\n"
+               "    .byte %ld"                      "\n"
+               "    .incbin \"%s\", 0x%X, %lu"      "\n"
+                                                    "\n",
+                // clang-format on
+                i, sequences[i]->font_section_size, sequences[i]->elf_path, sequences[i]->font_section_offset,
+                sequences[i]->font_section_size);
+    }
+    fprintf(out, ".balign 16\n");
 }
 
 struct seq_order {
@@ -324,7 +339,7 @@ struct seq_order {
     void *buf_ptr;
 };
 
-void
+static void
 read_seq_order(struct seq_order *order, const char *path)
 {
     // Read from file, we assume the file has been preprocessed with cpp so that whitespace is collapsed and each line
@@ -439,226 +454,6 @@ malformed:
 }
 
 int
-tablegen_samplebanks(const char *sb_hdr_out, const char **samplebanks_paths, int num_samplebank_files)
-{
-    struct samplebank_file_info finfo;
-    finfo.samplebanks = NULL;
-    finfo.num_files = 0;
-
-    for (int i = 0; i < num_samplebank_files; i++) {
-        read_samplebank_xml_file(samplebanks_paths[i], &finfo);
-    }
-
-#if 0
-    for (size_t i = 0; i < finfo.num_files; i++) {
-        samplebank *sb = &finfo.samplebanks[i];
-
-        // debug print stuff
-
-        printf("    Name: \"%s\"\n", sb->name);
-        printf("    Index: %d\n", sb->index);
-        printf("    Medium: \"%s\"\n", sb->medium);
-        printf("    CachePolicy: \"%s\"\n", sb->cache_policy);
-        printf("    BufferBug: %d\n", sb->buffer_bug);
-
-        printf("    NumSamples: %lu\n", sb->num_samples);
-        for (size_t i = 0; i < sb->num_samples; i++) {
-            printf("      \"%s\" : \"%s\" : %d\n", sb->sample_paths[i], sb->sample_names[i], sb->is_sample[i]);
-        }
-
-        printf("    NumPointers: %lu\n", sb->num_pointers);
-        printf("      Pointers: [ ");
-        for (size_t i = 0; i < sb->num_pointers; i++) {
-            printf("%d ", sb->pointer_indices[i]);
-        }
-        printf("]\n");
-    }
-#endif
-
-    // find largest index
-
-    size_t indices_max = 0;
-
-    for (size_t i = 0; i < finfo.num_files; i++) {
-        samplebank *sb = &finfo.samplebanks[i];
-        unsigned index = sb->index;
-        if (index > indices_max)
-            indices_max = index;
-
-        for (size_t j = 0; j < sb->num_pointers; j++) {
-            index = sb->pointer_indices[j];
-            if (index > indices_max)
-                indices_max = index;
-        }
-    }
-
-    size_t indices_len = indices_max + 1;
-
-    // classify indices, sort cache policies, check that no two indices are the same
-
-#define INDEX_NONE      0
-#define INDEX_NOPOINTER 1
-#define INDEX_POINTER   2
-
-    // TODO coalesce mallocs into one big allocation
-
-    char *indices_classes = malloc(indices_len);
-    memset(indices_classes, INDEX_NONE, indices_len);
-
-    const char **names = malloc(indices_len * sizeof(const char *));
-    unsigned *ptr_indices = malloc(indices_len * sizeof(unsigned));
-
-    const char **media = malloc(indices_len * sizeof(const char *));
-    const char **cache_policies = malloc(indices_len * sizeof(const char *));
-
-    for (size_t i = 0; i < finfo.num_files; i++) {
-        samplebank *sb = &finfo.samplebanks[i];
-        unsigned index = sb->index;
-
-        if (indices_classes[index] != INDEX_NONE)
-            error("Overlapping indices");
-        indices_classes[index] = INDEX_NOPOINTER;
-
-        names[index] = sb->name;
-        media[index] = sb->medium;
-        cache_policies[index] = sb->cache_policy;
-
-        unsigned real_index = index;
-
-        for (size_t j = 0; j < sb->num_pointers; j++) {
-            index = sb->pointer_indices[j];
-
-            if (indices_classes[index] != INDEX_NONE)
-                error("Overlapping indices");
-            indices_classes[index] = INDEX_POINTER;
-
-            ptr_indices[index] = real_index;
-            media[index] = sb->medium;
-            cache_policies[index] = sb->cache_policy;
-        }
-    }
-
-    // check that we have no gaps
-
-    for (size_t i = 0; i < indices_len; i++) {
-        if (indices_classes[i] == INDEX_NONE) {
-            error("Missing index");
-        }
-    }
-
-    // emit table
-
-    FILE *out = fopen(sb_hdr_out, "w");
-    if (out == NULL)
-        error("Failed to open samplebank header output");
-
-    fprintf(out,
-            // clang-format off
-           "/**"                                                    "\n"
-           " * DEFINE_SAMPLE_BANK(name, medium, cachePolicy)"       "\n"
-           " * DEFINE_SAMPLE_BANK_PTR(name, medium, cachePolicy)"   "\n"
-           " */"                                                    "\n"
-            // clang-format on
-    );
-
-    for (size_t i = 0; i < indices_len; i++) {
-        if (indices_classes[i] == INDEX_NOPOINTER) {
-            fprintf(out, "DEFINE_SAMPLE_BANK    (%s, %s, %s)\n", names[i], media[i], cache_policies[i]);
-        } else if (indices_classes[i] == INDEX_POINTER) {
-            fprintf(out, "DEFINE_SAMPLE_BANK_PTR(%u, %s, %s)\n", ptr_indices[i], media[i], cache_policies[i]);
-        } else {
-            assert(false);
-        }
-    }
-
-    fclose(out);
-
-    free(indices_classes);
-
-    return EXIT_SUCCESS;
-}
-
-int
-tablegen_soundfonts(const char *sf_hdr_out, const char **soundfonts_paths, int num_soundfont_files)
-{
-    struct soundfont_file_info finfo_base;
-    finfo_base.next = NULL;
-    finfo_base.soundfont = NULL;
-
-    for (int i = 0; i < num_soundfont_files; i++) {
-        read_soundfont_xml_file(soundfonts_paths[i], &finfo_base);
-    }
-
-    FILE *out = fopen(sf_hdr_out, "w");
-
-    fprintf(out,
-            // clang-format off
-           "/**"                                                                    "\n"
-           " * DEFINE_SOUNDFONT(name, medium, cachePolicy, sampleBankNormal, "
-                               "sampleBankDD, nInstruments, nDrums, nSfx)"          "\n"
-           " */"                                                                    "\n"
-            // clang-format on
-    );
-
-    for (struct soundfont_file_info *finfo = finfo_base.next; finfo != NULL; finfo = finfo->next) {
-        soundfont *sf = finfo->soundfont;
-
-        // printf("%s\n", sf->info.name);
-        // printf("%s\n", sf->info.medium);
-        // printf("%s\n", sf->info.cache_policy);
-        // printf("%d\n", finfo->normal_bank_index);
-        // printf("%d\n", finfo->dd_bank_index);
-        // printf("%d\n", sf->num_instruments);
-        // printf("%d\n", sf->num_drums);
-        // printf("%d\n", sf->num_effects);
-
-        // fprintf(out, "DEFINE_SOUNDFONT(%s, %s, %s, %d, %d, %d, %d, %d)\n",
-        //         sf->info.name, sf->info.medium, sf->info.cache_policy,
-        //         finfo->normal_bank_index, finfo->dd_bank_index, sf->num_instruments, sf->num_drums, sf->num_effects);
-
-        fprintf(out, "DEFINE_SOUNDFONT(%s, %s, %s, %d, %d, SF%d_NUM_INSTRUMENTS, SF%d_NUM_DRUMS, SF%d_NUM_SFX)\n",
-                sf->info.name, sf->info.medium, sf->info.cache_policy, finfo->normal_bank_index, finfo->dd_bank_index,
-                sf->info.index, sf->info.index, sf->info.index);
-    }
-
-    fclose(out);
-
-    return EXIT_SUCCESS;
-}
-
-static void
-gen_sequence_font_table(FILE *out, struct seqdata **sequences, size_t num_sequences)
-{
-    fprintf(out,
-            // clang-format off
-                                            "\n"
-           ".section .rodata"               "\n"
-                                            "\n"
-           ".global gSequenceFontTable"     "\n"
-           "gSequenceFontTable:"            "\n"
-            // clang-format on
-    );
-
-    for (size_t i = 0; i < num_sequences; i++) {
-        fprintf(out, "    .half Fonts_%lu - gSequenceFontTable\n", i);
-    }
-    fprintf(out, "\n");
-
-    for (size_t i = 0; i < num_sequences; i++) {
-        fprintf(out,
-                // clang-format off
-               "Fonts_%lu:"                         "\n"
-               "    .byte %ld"                      "\n"
-               "    .incbin \"%s\", 0x%X, %lu"      "\n"
-                                                    "\n",
-                // clang-format on
-                i, sequences[i]->font_section_size, sequences[i]->elf_path, sequences[i]->font_section_offset,
-                sequences[i]->font_section_size);
-    }
-    fprintf(out, ".balign 16\n");
-}
-
-int
 tablegen_sequences(const char *seq_font_tbl_out, const char *seq_order_path, const char **sequences_paths,
                    int num_sequence_files)
 {
@@ -669,22 +464,88 @@ tablegen_sequences(const char *seq_font_tbl_out, const char *seq_order_path, con
     //     printf("\"%s\" \"%s\" %d\n", order.names[i], order.enum_names[i], order.ptr_flags[i]);
     // }
 
-    struct sequences_file_info seq_info;
-    seq_info.file_data = NULL;
-    seq_info.num_files = 0;
+    struct seqdata *file_data = malloc(num_sequence_files * sizeof(struct seqdata));
 
     for (int i = 0; i < num_sequence_files; i++) {
-        read_sequence_elf_file(sequences_paths[i], &seq_info);
+        const char *path = sequences_paths[i];
+
+        if (!is_ofile(path))
+            error("Not a .o file? (\"%s\")", path);
+
+        // printf("\"%s\"\n", path);
+
+        // Open ELF file
+
+        size_t data_size;
+        void *data = elf32_read(path, &data_size);
+
+        Elf32_Shdr *symtab = elf32_get_symtab(data, data_size);
+        if (symtab == NULL)
+            error("No symtab?");
+        Elf32_Shdr *shstrtab = elf32_get_shstrtab(data, data_size);
+        if (shstrtab == NULL)
+            error("No shstrtab?");
+        Elf32_Shdr *strtab = elf32_get_strtab(data, data_size);
+        if (symtab == NULL)
+            error("No strtab?");
+
+        Elf32_Shdr *font_section = elf32_section_forname(".fonts", shstrtab, data, data_size);
+        if (font_section == NULL)
+            error("No fonts defined?");
+
+        // Find the <name>_Start symbol
+
+        Elf32_Sym *sym = GET_PTR(data, symtab->sh_offset);
+        Elf32_Sym *sym_end = GET_PTR(data, symtab->sh_offset + symtab->sh_size);
+
+        char *seq_name = NULL;
+
+        for (size_t i = 0; sym < sym_end; sym++, i++) {
+            validate_read(symtab->sh_offset + i * sizeof(Elf32_Sym), sizeof(Elf32_Sym), data_size);
+
+            // The start symbol should be defined and global
+            int bind = sym->st_info >> 4;
+            if (bind != SB_GLOBAL || sym->st_shndx == SHN_UND) {
+                continue;
+            }
+
+            const char *sym_name = elf32_get_string(sym->st_name, strtab, data, data_size);
+            size_t name_len = strlen(sym_name);
+
+            if (name_len < 6) // _Start
+                continue;
+            if (sym_name[name_len - 6] != '_' || sym_name[name_len - 5] != 'S' || sym_name[name_len - 4] != 't' ||
+                sym_name[name_len - 3] != 'a' || sym_name[name_len - 2] != 'r' || sym_name[name_len - 1] != 't')
+                continue;
+
+            // Got start symbol, extract name
+            seq_name = malloc(name_len - 6 + 1);
+            strncpy(seq_name, sym_name, name_len - 6);
+            seq_name[name_len - 6] = '\0';
+            break;
+        }
+
+        if (seq_name == NULL)
+            error("No start symbol?");
+
+        // Populate new data
+        struct seqdata *seqdata = &file_data[i];
+        seqdata->elf_path = strdup(path);
+        seqdata->name = seq_name;
+        seqdata->font_section_offset = font_section->sh_offset;
+        seqdata->font_section_size = font_section->sh_size;
+
+        free(data);
     }
 
 #if 0
     printf(                 "\n");
     printf("Result:"        "\n");
-    printf("Num files: %lu" "\n", seq_info.num_files);
+    printf("Num files: %lu" "\n", num_sequence_files);
     printf(                 "\n");
 
-    for (size_t i = 0; i < seq_info.num_files; i++) {
-        struct seqdata *seqdata = &seq_info.file_data[i];
+    for (int i = 0; i < num_sequence_files; i++) {
+        struct seqdata *seqdata = &file_data[i];
 
         printf("    elf path    : \"%s\""   "\n", seqdata->elf_path);
         printf("    name        : \"%s\""   "\n", seqdata->name);
@@ -696,11 +557,7 @@ tablegen_sequences(const char *seq_font_tbl_out, const char *seq_order_path, con
 
     // link against seq order
 
-    struct seqdata **final_seqdata = malloc(order.num_sequences * sizeof(struct seqdata));
-
-    for (size_t i = 0; i < order.num_sequences; i++) {
-        final_seqdata[i] = NULL;
-    }
+    struct seqdata **final_seqdata = calloc(order.num_sequences, sizeof(struct seqdata *));
 
     for (size_t i = 0; i < order.num_sequences; i++) {
         // Skip pointers for now
@@ -710,8 +567,8 @@ tablegen_sequences(const char *seq_font_tbl_out, const char *seq_order_path, con
         // If it's not a pointer, "name" is the name as it appears in a sequence file, find it in the list of sequences
         char *name = order.names[i];
 
-        for (size_t j = 0; j < seq_info.num_files; j++) {
-            struct seqdata *seqdata = &seq_info.file_data[j];
+        for (int j = 0; j < num_sequence_files; j++) {
+            struct seqdata *seqdata = &file_data[j];
 
             if (strequ(name, seqdata->name)) {
                 // Found name, done
@@ -759,13 +616,14 @@ tablegen_sequences(const char *seq_font_tbl_out, const char *seq_order_path, con
 
     // Free all
 
-    for (size_t i = 0; i < seq_info.num_files; i++) {
-        struct seqdata *seqdata = &seq_info.file_data[i];
+    for (int i = 0; i < num_sequence_files; i++) {
+        struct seqdata *seqdata = &file_data[i];
 
         free(seqdata->elf_path);
         free(seqdata->name);
     }
-    free(seq_info.file_data);
+    free(file_data);
+    free(final_seqdata);
 
     free(order.buf_ptr);
     free(order.names);
@@ -774,6 +632,8 @@ tablegen_sequences(const char *seq_font_tbl_out, const char *seq_order_path, con
 
     return EXIT_SUCCESS;
 }
+
+/* Common */
 
 static int
 usage(const char *progname)
@@ -835,5 +695,6 @@ main(int argc, char **argv)
     } else {
         return usage(progname);
     }
+
     return ret;
 }
