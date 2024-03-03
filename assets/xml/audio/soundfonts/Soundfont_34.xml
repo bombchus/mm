@@ -4,6 +4,6 @@
         <Envelope Name="Env0"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF34_INST_0"/>
+        <Instrument ProgramNumber="0" Name="SF34_INST_0"/>
     </Instruments>
 </SoundFont>

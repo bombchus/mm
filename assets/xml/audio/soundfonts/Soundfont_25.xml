@@ -14,22 +14,20 @@
         <Envelope Name="Env10"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF25_INST_0"/>
-        <Instrument Name="SF25_INST_1"/>
-        <Instrument Name="SF25_INST_2"/>
-        <Instrument Name="SF25_INST_3"/>
-        <Instrument Name="SF25_INST_4"/>
-        <Instrument Name="SF25_INST_5"/>
-        <Instrument Name="SF25_INST_6"/>
-        <Instrument/>
-        <Instrument Name="SF25_INST_8"/>
-        <Instrument/>
-        <Instrument Name="SF25_INST_10"/>
-        <Instrument Name="SF25_INST_11"/>
-        <Instrument Name="SF25_INST_12"/>
-        <Instrument Name="SF25_INST_13"/>
-        <Instrument Name="SF25_INST_14"/>
-        <Instrument Name="SF25_INST_15"/>
+        <Instrument ProgramNumber="0" Name="SF25_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF25_INST_1"/>
+        <Instrument ProgramNumber="2" Name="SF25_INST_2"/>
+        <Instrument ProgramNumber="3" Name="SF25_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF25_INST_4"/>
+        <Instrument ProgramNumber="5" Name="SF25_INST_5"/>
+        <Instrument ProgramNumber="6" Name="SF25_INST_6"/>
+        <Instrument ProgramNumber="8" Name="SF25_INST_8"/>
+        <Instrument ProgramNumber="10" Name="SF25_INST_10"/>
+        <Instrument ProgramNumber="11" Name="SF25_INST_11"/>
+        <Instrument ProgramNumber="12" Name="SF25_INST_12"/>
+        <Instrument ProgramNumber="13" Name="SF25_INST_13"/>
+        <Instrument ProgramNumber="14" Name="SF25_INST_14"/>
+        <Instrument ProgramNumber="15" Name="SF25_INST_15"/>
     </Instruments>
     <Drums>
         <Drum Name="SF25_DRUM_0"/>

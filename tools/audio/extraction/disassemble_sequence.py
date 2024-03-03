@@ -199,10 +199,13 @@ class ArgInstr(ArgU8):
         if self.value in builtins:
             return builtins[self.value]
 
-        num_instruments = len(disas.used_fonts[0].instruments)
-        if self.value < num_instruments:
-            name = disas.used_fonts[0].instrument_name(self.value)
+        # Check against first font only, this is fine for 99% of cases since most sequences use just one font
+        font0 : AudiobankFile = disas.used_fonts[0]
+
+        if self.value in font0.instrument_index_map:
+            name = font0.instrument_name(self.value)
         else:
+            print(f"Invalid instrument sourced from {font0.name}: {self.value}")
             name = f"{self.value} /* invalid instrument */"
         return name
 

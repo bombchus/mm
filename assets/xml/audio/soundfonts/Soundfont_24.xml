@@ -5,17 +5,7 @@
         <Envelope Name="Env1"/>
     </Envelopes>
     <Instruments>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF24_INST_10"/>
+        <Instrument ProgramNumber="10" Name="SF24_INST_10"/>
     </Instruments>
     <Drums>
         <Drum Name="SF24_DRUM_0"/>

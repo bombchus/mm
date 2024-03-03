@@ -11,19 +11,18 @@
         <Envelope Name="Env7"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF6_INST_0"/>
-        <Instrument Name="SF6_INST_1"/>
-        <Instrument Name="SF6_INST_2"/>
-        <Instrument Name="SF6_INST_3"/>
-        <Instrument Name="SF6_INST_4"/>
-        <Instrument Name="SF6_INST_5"/>
-        <Instrument Name="SF6_INST_6"/>
-        <Instrument Name="SF6_INST_7"/>
-        <Instrument Name="SF6_INST_8"/>
-        <Instrument/>
-        <Instrument Name="SF6_INST_10"/>
-        <Instrument Name="SF6_INST_11"/>
-        <Instrument Name="SF6_INST_12"/>
+        <Instrument ProgramNumber="0" Name="SF6_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF6_INST_1"/>
+        <Instrument ProgramNumber="2" Name="SF6_INST_2"/>
+        <Instrument ProgramNumber="3" Name="SF6_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF6_INST_4"/>
+        <Instrument ProgramNumber="5" Name="SF6_INST_5"/>
+        <Instrument ProgramNumber="6" Name="SF6_INST_6"/>
+        <Instrument ProgramNumber="7" Name="SF6_INST_7"/>
+        <Instrument ProgramNumber="8" Name="SF6_INST_8"/>
+        <Instrument ProgramNumber="10" Name="SF6_INST_10"/>
+        <Instrument ProgramNumber="11" Name="SF6_INST_11"/>
+        <Instrument ProgramNumber="12" Name="SF6_INST_12"/>
     </Instruments>
     <Drums>
         <Drum Name="SF6_DRUM_0"/>

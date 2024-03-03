@@ -12,22 +12,14 @@
         <Envelope Name="Env8"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF32_INST_0"/>
-        <Instrument Name="SF32_INST_1"/>
-        <Instrument/>
-        <Instrument Name="SF32_INST_3"/>
-        <Instrument Name="SF32_INST_4"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF32_INST_8"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF32_INST_12"/>
-        <Instrument/>
-        <Instrument Name="SF32_INST_14"/>
-        <Instrument Name="SF32_INST_15"/>
+        <Instrument ProgramNumber="0" Name="SF32_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF32_INST_1"/>
+        <Instrument ProgramNumber="3" Name="SF32_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF32_INST_4"/>
+        <Instrument ProgramNumber="8" Name="SF32_INST_8"/>
+        <Instrument ProgramNumber="12" Name="SF32_INST_12"/>
+        <Instrument ProgramNumber="14" Name="SF32_INST_14"/>
+        <Instrument ProgramNumber="15" Name="SF32_INST_15"/>
     </Instruments>
     <Drums>
         <Drum Name="SF32_DRUM_0"/>

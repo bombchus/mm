@@ -7,20 +7,12 @@
         <Envelope Name="Env3"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF8_INST_0"/>
-        <Instrument Name="SF8_INST_1"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF8_INST_5"/>
-        <Instrument Name="SF8_INST_6"/>
-        <Instrument Name="SF8_INST_7"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF8_INST_13"/>
-        <Instrument Name="SF8_INST_14"/>
+        <Instrument ProgramNumber="0" Name="SF8_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF8_INST_1"/>
+        <Instrument ProgramNumber="5" Name="SF8_INST_5"/>
+        <Instrument ProgramNumber="6" Name="SF8_INST_6"/>
+        <Instrument ProgramNumber="7" Name="SF8_INST_7"/>
+        <Instrument ProgramNumber="13" Name="SF8_INST_13"/>
+        <Instrument ProgramNumber="14" Name="SF8_INST_14"/>
     </Instruments>
 </SoundFont>

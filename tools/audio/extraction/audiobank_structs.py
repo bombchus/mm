@@ -316,6 +316,7 @@ class Instrument:
             self.normal_notes_sample, self.normal_notes_tuning, \
             self.high_notes_sample, self.high_notes_tuning = struct.unpack(">BBBBIIfIfIf", data[:0x20])
 
+        self.program_number = None
         self.offset = None
         self.struct_index = None
         self.unused = False
@@ -371,10 +372,8 @@ class Instrument:
     def to_xml(self, xml : XMLWriter, name : str, sample_names_func, envelope_name_func):
         attributes = {}
 
-        if self.struct_index is not None:
-            attributes["MatchOrder"] = self.struct_index
-
         if not self.unused:
+            attributes["ProgramNumber"] = self.program_number
             attributes["Name"] = name
 
         # TODO release rate overrides?

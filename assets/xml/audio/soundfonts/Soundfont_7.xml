@@ -10,21 +10,15 @@
         <Envelope Name="Env6"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF7_INST_0"/>
-        <Instrument Name="SF7_INST_1"/>
-        <Instrument Name="SF7_INST_2"/>
-        <Instrument Name="SF7_INST_3"/>
-        <Instrument Name="SF7_INST_4"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF7_INST_11"/>
-        <Instrument Name="SF7_INST_12"/>
-        <Instrument Name="SF7_INST_13"/>
-        <Instrument Name="SF7_INST_14"/>
-        <Instrument Name="SF7_INST_15"/>
+        <Instrument ProgramNumber="0" Name="SF7_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF7_INST_1"/>
+        <Instrument ProgramNumber="2" Name="SF7_INST_2"/>
+        <Instrument ProgramNumber="3" Name="SF7_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF7_INST_4"/>
+        <Instrument ProgramNumber="11" Name="SF7_INST_11"/>
+        <Instrument ProgramNumber="12" Name="SF7_INST_12"/>
+        <Instrument ProgramNumber="13" Name="SF7_INST_13"/>
+        <Instrument ProgramNumber="14" Name="SF7_INST_14"/>
+        <Instrument ProgramNumber="15" Name="SF7_INST_15"/>
     </Instruments>
 </SoundFont>

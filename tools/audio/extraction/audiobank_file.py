@@ -183,6 +183,7 @@ class AudiobankFile:
                  rom_offset : int, bank1 : AudioTableFile, bank2 : AudioTableFile, bank1_num : int, bank2_num : int):
         self.bank_num = index
         self.table_entry : AudioCodeTable.AudioCodeTableEntry = table_entry
+        self.num_instruments = self.table_entry.num_instruments
         self.data = self.table_entry.data(rom_image, rom_offset)
         self.bank1 : AudioTableFile = bank1
         self.bank2 : AudioTableFile = bank2
@@ -309,45 +310,33 @@ class AudiobankFile:
 
     def collect_instruments(self):
         # Read structures
-
         self.instrument_offset_list = self.read_pointer_list(8, self.table_entry.num_instruments, InstrumentPtr)
         self.instruments = self.read_list_from_offset_list(self.instrument_offset_list, Instrument)
 
-        # Build order information, this is required as often instrument structures are not in the same order they
-        # are listed in the pointer list. In order to get a matching bank on rebuild we need to save the order info
-        # for the structures.
-
-        nonnull_offsets = [o for o in self.instrument_offset_list if o != 0]
-        sorted_offsets = list(sorted(nonnull_offsets))
-        if not list_is_in_order(nonnull_offsets):
-            # maps between the pointer order and structure order
-            instr_offset_to_index = { o : i for i,o in enumerate(sorted_offsets) }
-            # struct_i = instr_offset_map[pointer_i]
-        else:
-            # both orders happen to agree, we can do nothing
-            instr_offset_to_index = None
-
-
+        # Record order information
         for i,instr in enumerate(self.instruments):
             if instr is None:
                 # NULL entry in pointer list
                 continue
-
+            instr.program_number = i
             instr.offset = self.instrument_offset_list[i]
 
-            # Build order map
+        # Get rid of NULL entries, these correspond to program numbers with no assigned instrument.
+        self.instruments = [instr for instr in self.instruments if instr is not None]
 
-            if instr_offset_to_index is not None:
-                # Instrument structures often are not sorted in the same order as the pointer list. Record the index
-                # of the structure for matching.
-                offset = self.instrument_offset_list[i]
-                if offset != 0:
-                    instr.struct_index = instr_offset_to_index[offset]
-                else:
-                    instr.struct_index = None
-            else:
-                instr.struct_index = None
+        # Build index map for sequence checking
+        self.instrument_index_map = { instr.program_number : instr for instr in self.instruments }
 
+        # The struct index records the order of the instrument structures themselves. This is often different than the
+        # order they appear in the pointer table, since the pointer table is indexed by program number. We want to emit
+        # xml entries in struct order with a property stating their program number as this seems most user-friendly.
+        for i,instr in enumerate(sorted(self.instruments, key=lambda instr : instr.offset)):
+            instr : Instrument
+            instr.struct_index = i
+
+        # Read data that this structure references
+
+        for i,instr in enumerate(self.instruments):
             # Read the envelope
             self.read_envelope(instr.envelope, instr.release_rate)
 
@@ -446,10 +435,8 @@ class AudiobankFile:
                     st.unused = True
 
                     # Assign struct index for this unreferenced instrument
-                    non_null_instrs = [instr for instr in self.instruments if instr is not None]
-                    sorted_instrs = list(sorted(non_null_instrs, key= lambda instr : instr.struct_index))
                     new_index = -1
-                    for instr in sorted_instrs:
+                    for instr in sorted(self.instruments, key= lambda instr : instr.struct_index):
                         instr : Instrument
 
                         if instr.offset > unref_start_offset:
@@ -461,7 +448,7 @@ class AudiobankFile:
                     else:
                         # Give it a new index at the end
                         if new_index == -1:
-                            new_index = len(sorted_instrs)
+                            new_index = len(self.instruments)
 
                     st.struct_index = new_index
                     self.instruments.append(st)
@@ -700,9 +687,6 @@ class AudiobankFile:
 
         # Link Instruments
         for instr in self.instruments:
-            if instr is None:
-                continue
-
             instr.link(self.envelopes[instr.envelope], [self.lookup_sample(offset) for offset in
                        [instr.low_notes_sample, instr.normal_notes_sample, instr.high_notes_sample]])
 
@@ -810,11 +794,11 @@ class AudiobankFile:
 
         xml.write_start_tag("Instruments")
 
-        for i,instr in enumerate(self.instruments):
-            if instr is None:
-                xml.write_element("Instrument")
-            else:
-                instr.to_xml(xml, self.instrument_name(i), self.sample_name_func, self.envelope_name_func)
+        # Write in struct order
+        for instr in sorted(self.instruments, key=lambda instr : instr.struct_index):
+            instr : Instrument
+            name = self.instrument_name(instr.program_number)
+            instr.to_xml(xml, name, self.sample_name_func, self.envelope_name_func)
 
         xml.write_end_tag()
 
@@ -840,6 +824,10 @@ class AudiobankFile:
         if self.loops_have_frames:
             # Some MM banks have sample frame counts embedded in loop headers, but not all soundfonts do this
             start["LoopsHaveFrames"] = "true"
+
+        if max(instr.program_number or 0 for instr in self.instruments) + 1 != self.table_entry.num_instruments:
+            # Some banks have trailing NULLs in their instrument pointer tables, record the max length for matching
+            start["NumInstruments"] = self.table_entry.num_instruments
 
         if self.pad_to_size is not None:
             # The final soundfont typically has extra zeros at the end
@@ -888,13 +876,12 @@ class AudiobankFile:
         if len(self.instruments) != 0:
             xml.write_start_tag("Instruments")
 
-            for i,instr in enumerate(self.instruments):
-                if instr is None:
-                    xml.write_element("Instrument")
-                else:
-                    xml.write_element("Instrument", {
-                        "Name" : self.instrument_name(i)
-                    })
+            # Write in struct order
+            for instr in sorted(self.instruments, key=lambda instr : instr.struct_index):
+                xml.write_element("Instrument", {
+                    "ProgramNumber" : instr.program_number,
+                    "Name" : self.instrument_name(instr.program_number),
+                })
 
             xml.write_end_tag()
 

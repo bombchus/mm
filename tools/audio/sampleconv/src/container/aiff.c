@@ -489,7 +489,7 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
         if (read_size > chunk_size.value)
             error("overran chunk: %lu vs %u\n", read_size, chunk_size.value);
         else if (read_size < chunk_size.value)
-            warning("did not read entire %*s chunk: %lu vs %u", 4,cc4, read_size, chunk_size.value);
+            warning("did not read entire %*s chunk: %lu vs %u", 4, cc4, read_size, chunk_size.value);
 
         fseek(in, start + 8 + chunk_size.value, SEEK_SET);
     }

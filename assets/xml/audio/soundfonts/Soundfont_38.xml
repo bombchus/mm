@@ -6,10 +6,10 @@
         <Envelope Name="Env2"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF38_INST_0"/>
-        <Instrument Name="SF38_INST_1"/>
-        <Instrument Name="SF38_INST_2"/>
-        <Instrument Name="SF38_INST_3"/>
-        <Instrument Name="SF38_INST_4"/>
+        <Instrument ProgramNumber="0" Name="SF38_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF38_INST_1"/>
+        <Instrument ProgramNumber="2" Name="SF38_INST_2"/>
+        <Instrument ProgramNumber="3" Name="SF38_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF38_INST_4"/>
     </Instruments>
 </SoundFont>

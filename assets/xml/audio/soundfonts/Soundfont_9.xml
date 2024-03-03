@@ -10,19 +10,14 @@
         <Envelope Name="Env6"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF9_INST_0"/>
-        <Instrument Name="SF9_INST_1"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF9_INST_4"/>
-        <Instrument Name="SF9_INST_5"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF9_INST_8"/>
-        <Instrument/>
-        <Instrument Name="SF9_INST_10"/>
-        <Instrument Name="SF9_INST_11"/>
-        <Instrument Name="SF9_INST_12"/>
+        <Instrument ProgramNumber="0" Name="SF9_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF9_INST_1"/>
+        <Instrument ProgramNumber="4" Name="SF9_INST_4"/>
+        <Instrument ProgramNumber="5" Name="SF9_INST_5"/>
+        <Instrument ProgramNumber="8" Name="SF9_INST_8"/>
+        <Instrument ProgramNumber="10" Name="SF9_INST_10"/>
+        <Instrument ProgramNumber="11" Name="SF9_INST_11"/>
+        <Instrument ProgramNumber="12" Name="SF9_INST_12"/>
     </Instruments>
     <Drums>
         <Drum Name="SF9_DRUM_0"/>

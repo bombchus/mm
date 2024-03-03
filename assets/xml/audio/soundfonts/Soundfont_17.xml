@@ -14,22 +14,19 @@
         <Envelope Name="Env10"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF17_INST_0"/>
-        <Instrument Name="SF17_INST_1"/>
-        <Instrument/>
-        <Instrument Name="SF17_INST_3"/>
-        <Instrument Name="SF17_INST_4"/>
-        <Instrument Name="SF17_INST_5"/>
-        <Instrument Name="SF17_INST_6"/>
-        <Instrument Name="SF17_INST_7"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF17_INST_10"/>
-        <Instrument Name="SF17_INST_11"/>
-        <Instrument Name="SF17_INST_12"/>
-        <Instrument Name="SF17_INST_13"/>
-        <Instrument Name="SF17_INST_14"/>
-        <Instrument Name="SF17_INST_15"/>
+        <Instrument ProgramNumber="0" Name="SF17_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF17_INST_1"/>
+        <Instrument ProgramNumber="3" Name="SF17_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF17_INST_4"/>
+        <Instrument ProgramNumber="5" Name="SF17_INST_5"/>
+        <Instrument ProgramNumber="6" Name="SF17_INST_6"/>
+        <Instrument ProgramNumber="7" Name="SF17_INST_7"/>
+        <Instrument ProgramNumber="10" Name="SF17_INST_10"/>
+        <Instrument ProgramNumber="11" Name="SF17_INST_11"/>
+        <Instrument ProgramNumber="14" Name="SF17_INST_14"/>
+        <Instrument ProgramNumber="12" Name="SF17_INST_12"/>
+        <Instrument ProgramNumber="13" Name="SF17_INST_13"/>
+        <Instrument ProgramNumber="15" Name="SF17_INST_15"/>
     </Instruments>
     <Drums>
         <Drum Name="SF17_DRUM_0"/>

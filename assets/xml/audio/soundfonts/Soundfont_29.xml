@@ -8,16 +8,10 @@
         <Envelope Name="Env4"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF29_INST_0"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF29_INST_3"/>
-        <Instrument Name="SF29_INST_4"/>
-        <Instrument Name="SF29_INST_5"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF29_INST_10"/>
+        <Instrument ProgramNumber="0" Name="SF29_INST_0"/>
+        <Instrument ProgramNumber="3" Name="SF29_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF29_INST_4"/>
+        <Instrument ProgramNumber="5" Name="SF29_INST_5"/>
+        <Instrument ProgramNumber="10" Name="SF29_INST_10"/>
     </Instruments>
 </SoundFont>

@@ -324,8 +324,8 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
     // </Instrument>
 
     static const xml_attr_spec instr_spec = {
-        {"Name",          true,  xml_parse_c_identifier, offsetof(instr_data, name)             },
-        { "MatchOrder",   true,  xml_parse_int,          offsetof(instr_data, struct_index)     },
+        {"ProgramNumber", true,  xml_parse_int,          offsetof(instr_data, program_number)   },
+        { "Name",         true,  xml_parse_c_identifier, offsetof(instr_data, name)             },
         { "Envelope",     false, xml_parse_c_identifier, offsetof(instr_data, envelope_name)    },
         { "Release",      true,  xml_parse_u8,           offsetof(instr_data, release)          },
 
@@ -344,8 +344,6 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
         { "SampleRateHi", true,  xml_parse_double,       offsetof(instr_data, sample_rate_hi)   },
     };
 
-    int last_struct_index = 0;
-
     LL_FOREACH(xmlNodePtr, instr_node, instrs->children) {
         if (instr_node->type != XML_ELEMENT_NODE)
             continue;
@@ -358,11 +356,9 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
         if (!is_instr && !is_instr_unused)
             error("Unexpected element node %s in instrument list (line %d)", name, instr_node->line);
 
-        if (!is_instr_unused)
-            sf->num_instruments++;
-
         instr_data *instr = malloc(sizeof(instr_data));
 
+        instr->program_number = (unsigned)-1;
         instr->name = NULL;
         instr->sample_name_low = NULL;
         instr->sample_name_mid = NULL;
@@ -378,25 +374,29 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
         instr->sample_rate_lo = -1.0;
         instr->sample_rate_hi = -1.0;
         instr->release = RELEASE_UNSET;
-        instr->struct_index = last_struct_index;
         instr->unused = is_instr_unused;
-
-        if (instr_node->properties == NULL && !is_instr_unused) {
-            // printf("NULL Instrument\n");
-            instr->struct_index = -1;
-            instr->next_struct = NULL;
-            instr->prev_struct = NULL;
-            // <Instrument/>
-            goto link_instr;
-        }
 
         xml_parse_node_by_spec(instr, instr_node, instr_spec, ARRAY_COUNT(instr_spec));
 
-        // check name
-        if (!is_instr_unused && instr->name == NULL)
-            error("Instrument must be named");
+        if (!is_instr_unused) {
+            // check program number
+            if (instr->program_number >= 128)
+                error("Program numbers must be in the range 0-127 (got %u)", instr->program_number);
 
-        last_struct_index = instr->struct_index + 1;
+            // ensure program number is unique
+            unsigned upper = instr->program_number >> 5 & 3;
+            unsigned lower = instr->program_number & 0x1F;
+            if (sf->program_number_bitset[upper] & (1 << lower))
+                error("Duplicate program number %u", instr->program_number);
+            sf->program_number_bitset[upper] |= (1 << lower);
+
+            if (instr->program_number >= sf->info.num_instruments)
+                sf->info.num_instruments = instr->program_number + 1;
+
+            // check name
+            if (instr->name == NULL)
+                error("Instrument must be named");
+        }
 
         // check envelope
         instr->envelope = sf_get_envelope(sf, instr->envelope_name);
@@ -532,57 +532,6 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
             //        instr->sample_high_tuning, *(uint32_t*)&instr->sample_high_tuning);
         }
 
-        // printf("LINK: %d\n", instr->struct_index);
-
-        // link (struct), insertion sort by struct_index from highest to lowest
-        if (sf->instruments_struct == NULL) {
-            // printf("FIRST [%d]\n", instr->struct_index);
-
-            // first entry, immediately insert
-            sf->instruments_struct = instr;
-            sf->instruments_struct_last = instr;
-            instr->next_struct = NULL;
-            instr->prev_struct = NULL;
-        } else if (instr->struct_index >= sf->instruments_struct->struct_index) {
-            instr_data *next = sf->instruments_struct;
-
-            // printf("REPLACE FIRST [%d][%d]\n", instr->struct_index, next->struct_index);
-
-            instr->prev_struct = NULL;
-            next->prev_struct = instr;
-
-            instr->next_struct = next;
-
-            sf->instruments_struct = instr;
-            if (next->next_struct == NULL)
-                sf->instruments_struct_last = next;
-        } else {
-            instr_data *instr2 = sf->instruments_struct;
-
-            // not first entry, walk the list until the next struct has a larger index
-            for (instr2 = sf->instruments_struct; instr2->next_struct != NULL; instr2 = instr2->next_struct) {
-                if (instr->struct_index >= instr2->next_struct->struct_index)
-                    break;
-            }
-
-            instr_data *next = instr2->next_struct;
-            instr_data *prev = instr2;
-
-            prev->next_struct = instr;
-            instr->prev_struct = prev;
-
-            instr->next_struct = next;
-
-            if (next == NULL) {
-                sf->instruments_struct_last = instr;
-                // printf("INSERT LAST [%d][%d]\n", prev->struct_index, instr->struct_index);
-            } else {
-                next->prev_struct = instr;
-                // printf("INSERT BETWEEN [%d][%d][%d]\n", prev->struct_index, instr->struct_index, next->struct_index);
-            }
-        }
-
-    link_instr:
         // link
         if (sf->instruments == NULL) {
             sf->instruments = instr;
@@ -717,7 +666,7 @@ read_sfx_info(soundfont *sf, xmlNodePtr effects)
         if (!strequ(name, "Effect"))
             error("Unexpected element node %s in effects list (line %d)", name, eff->line);
 
-        sf->num_effects++;
+        sf->info.num_effects++;
 
         sfx_data *sfx = malloc(sizeof(sfx_data));
 
@@ -954,8 +903,9 @@ emit_c_header(FILE *out, soundfont *sf)
         fprintf(out, "extern SoundEffect SF%d_SFX_LIST[];\n\n", sf->info.index);
 
     if (sf->instruments != NULL) {
+        // Externs are emitted in struct order
         LL_FOREACH(instr_data *, instr, sf->instruments) {
-            if (instr->name == NULL)
+            if (instr->unused)
                 continue;
             fprintf(out, "extern Instrument %s;\n", instr->name);
         }
@@ -987,21 +937,29 @@ emit_c_header(FILE *out, soundfont *sf)
     size += 4;
 
     if (sf->instruments != NULL) {
-        fprintf(out, "NO_REORDER DATA Instrument* SF%d_INSTRUMENT_PTR_LIST[] = {\n", sf->info.index);
+        const char **instr_names = calloc(sf->info.num_instruments, sizeof(const char *));
 
+        // The instrument pointer table is indexed by program number. Since sf->instruments is sorted by struct index
+        // we must first sort by program number.
         LL_FOREACH(instr_data *, instr, sf->instruments) {
             if (instr->unused)
-                continue; // Don't increment list size as nothing was written
+                continue; // Unused instruments are not included in the table and have no meaningful program number
+            instr_names[instr->program_number] = instr->name;
+        }
 
-            if (instr->name == NULL)
+        fprintf(out, "NO_REORDER DATA Instrument* SF%d_INSTRUMENT_PTR_LIST[] = {\n", sf->info.index);
+
+        for (unsigned i = 0; i < sf->info.num_instruments; i++) {
+            if (instr_names[i] == NULL)
                 fprintf(out, "    NULL,\n");
             else
-                fprintf(out, "    &%s,\n", instr->name);
+                fprintf(out, "    &%s,\n", instr_names[i]);
             pos += 4;
             size += 4;
         }
-
         fprintf(out, "};\n");
+
+        free(instr_names);
     }
 
     // Pad the header to the next 0x10-byte boundary.
@@ -1352,24 +1310,11 @@ emit_c_instruments(FILE *out, soundfont *sf)
 {
     size_t size = 0;
 
-    if (sf->instruments_struct_last == NULL)
-        return size;
-
     fprintf(out, "// INSTRUMENTS\n\n");
 
     size_t unused_instr_num = 0;
 
-    // For matching reasons we need to emit instrument structures in a possibly different order to the order we emit
-    // the instrument pointers in the header. When reading the instrument information before, we created a linked list
-    // sorted by highest "struct index". We now walk backwards through this list to emit structures in order of lowest
-    // to highest "struct index".
-
-    for (instr_data *instr = sf->instruments_struct_last; instr != NULL; instr = instr->prev_struct) {
-        if (instr->name == NULL && !instr->unused)
-            // This corresponds to <Instrument/> entries, these have no associated data and only correspond to a NULL in
-            // the instrument pointer list. Ignores these.
-            continue;
-
+    LL_FOREACH(instr_data *, instr, sf->instruments) {
         if (instr->unused) {
             fprintf(out, "NO_REORDER DATA Instrument _INSTR_UNUSED_%lu = {\n", unused_instr_num);
             unused_instr_num++;
@@ -1523,7 +1468,7 @@ emit_c_drums(FILE *out, soundfont *sf)
         fprintf(out, "    &%s[%d],\n", ptr_table[i].name, ptr_table[i].n);
     }
 
-    sf->num_drums = table_len;
+    sf->info.num_drums = table_len;
 
     fprintf(out, "};\n");
     emit_padding_stmt(out, table_len * 4);
@@ -1604,14 +1549,10 @@ emit_h_instruments(FILE *out, soundfont *sf)
 
     // #define FONT{Index}_INSTR_{EnumName} {EnumValue}
 
-    int i = 0;
     LL_FOREACH(instr_data *, instr, sf->instruments) {
-        if (instr->name != NULL) {
-            fprintf(out, "#define %s %d\n", instr->name, i);
-        } else {
-            // fprintf(out, "\n");
+        if (!instr->unused) {
+            fprintf(out, "#define %s %d\n", instr->name, instr->program_number);
         }
-        i++;
     }
     fprintf(out, "\n");
 }
@@ -1775,12 +1716,8 @@ main(int argc, char **argv)
     }
 
     // read all instruments
-    sf.num_instruments = 0;
-    sf.num_drums = 0;
-    sf.num_effects = 0;
+    memset(sf.program_number_bitset, 0, sizeof(sf.program_number_bitset));
     sf.instruments = NULL;
-    sf.instruments_struct = NULL;
-    sf.instruments_struct_last = NULL;
     sf.drums = NULL;
     sf.sfx = NULL;
     LL_FOREACH(xmlNodePtr, node, root->children) {
@@ -1852,8 +1789,8 @@ main(int argc, char **argv)
            "#define SF%d_NUM_SFX         %d"    "\n"
                                                 "\n",
             // clang-format on
-            sf.info.name, sf.info.index, sf.info.index, sf.num_instruments, sf.info.index, sf.num_drums, sf.info.index,
-            sf.num_effects);
+            sf.info.name, sf.info.index, sf.info.index, sf.info.num_instruments, sf.info.index, sf.info.num_drums,
+            sf.info.index, sf.info.num_effects);
 
     emit_h_instruments(out_h, &sf);
     emit_h_drums(out_h, &sf);

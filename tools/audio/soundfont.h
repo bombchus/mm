@@ -47,11 +47,11 @@ typedef struct instr_data {
     struct instr_data *next_struct;
     struct instr_data *prev_struct;
 
+    unsigned int program_number;
     const char *name;
     const char *envelope_name;
 
     // for matching only
-    int struct_index;
     bool unused;
 
     // these are provided as-is for unused (name == NULL) otherwise they are read from the aifc file
@@ -121,12 +121,14 @@ typedef struct {
         int pointer_index;
         const char *bank_path_dd;
         unsigned int pad_to_size;
+        unsigned int num_instruments; // or the maximum program number (+1), since this also includes empty slots
+                                      // between instruments
+        unsigned int num_drums;
+        unsigned int num_effects;
         bool loops_have_frames;
     } info;
 
-    int num_instruments;
-    int num_drums;
-    int num_effects;
+    uint32_t program_number_bitset[4];
 
     envelope_data *envelopes;
     envelope_data *envelope_last;
@@ -139,8 +141,6 @@ typedef struct {
 
     instr_data *instruments;
     instr_data *instrument_last;
-    instr_data *instruments_struct;
-    instr_data *instruments_struct_last;
 
     drum_data *drums;
     drum_data *drums_last;

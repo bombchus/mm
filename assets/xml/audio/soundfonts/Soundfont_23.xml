@@ -12,19 +12,15 @@
         <Envelope Name="Env8"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF23_INST_0"/>
-        <Instrument Name="SF23_INST_1"/>
-        <Instrument Name="SF23_INST_2"/>
-        <Instrument Name="SF23_INST_3"/>
-        <Instrument Name="SF23_INST_4"/>
-        <Instrument Name="SF23_INST_5"/>
-        <Instrument Name="SF23_INST_6"/>
-        <Instrument Name="SF23_INST_7"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF23_INST_12"/>
-        <Instrument Name="SF23_INST_13"/>
+        <Instrument ProgramNumber="0" Name="SF23_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF23_INST_1"/>
+        <Instrument ProgramNumber="2" Name="SF23_INST_2"/>
+        <Instrument ProgramNumber="3" Name="SF23_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF23_INST_4"/>
+        <Instrument ProgramNumber="5" Name="SF23_INST_5"/>
+        <Instrument ProgramNumber="6" Name="SF23_INST_6"/>
+        <Instrument ProgramNumber="7" Name="SF23_INST_7"/>
+        <Instrument ProgramNumber="13" Name="SF23_INST_13"/>
+        <Instrument ProgramNumber="12" Name="SF23_INST_12"/>
     </Instruments>
 </SoundFont>

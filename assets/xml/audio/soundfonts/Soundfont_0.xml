@@ -17,128 +17,127 @@
         <Envelope Name="Env13"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF0_INST_0"/>
-        <Instrument Name="SF0_INST_1"/>
-        <Instrument Name="SF0_INST_2"/>
-        <Instrument Name="SF0_INST_3"/>
-        <Instrument Name="SF0_INST_4"/>
-        <Instrument Name="SF0_INST_5"/>
-        <Instrument Name="SF0_INST_6"/>
-        <Instrument Name="SF0_INST_7"/>
-        <Instrument Name="SF0_INST_8"/>
-        <Instrument Name="SF0_INST_9"/>
-        <Instrument Name="SF0_INST_10"/>
-        <Instrument Name="SF0_INST_11"/>
-        <Instrument Name="SF0_INST_12"/>
-        <Instrument Name="SF0_INST_13"/>
-        <Instrument Name="SF0_INST_14"/>
-        <Instrument Name="SF0_INST_15"/>
-        <Instrument Name="SF0_INST_16"/>
-        <Instrument Name="SF0_INST_17"/>
-        <Instrument Name="SF0_INST_18"/>
-        <Instrument Name="SF0_INST_19"/>
-        <Instrument Name="SF0_INST_20"/>
-        <Instrument Name="SF0_INST_21"/>
-        <Instrument Name="SF0_INST_22"/>
-        <Instrument Name="SF0_INST_23"/>
-        <Instrument Name="SF0_INST_24"/>
-        <Instrument Name="SF0_INST_25"/>
-        <Instrument Name="SF0_INST_26"/>
-        <Instrument Name="SF0_INST_27"/>
-        <Instrument Name="SF0_INST_28"/>
-        <Instrument Name="SF0_INST_29"/>
-        <Instrument Name="SF0_INST_30"/>
-        <Instrument Name="SF0_INST_31"/>
-        <Instrument Name="SF0_INST_32"/>
-        <Instrument Name="SF0_INST_33"/>
-        <Instrument Name="SF0_INST_34"/>
-        <Instrument Name="SF0_INST_35"/>
-        <Instrument Name="SF0_INST_36"/>
-        <Instrument Name="SF0_INST_37"/>
-        <Instrument Name="SF0_INST_38"/>
-        <Instrument Name="SF0_INST_39"/>
-        <Instrument Name="SF0_INST_40"/>
-        <Instrument Name="SF0_INST_41"/>
-        <Instrument Name="SF0_INST_42"/>
-        <Instrument Name="SF0_INST_43"/>
-        <Instrument Name="SF0_INST_44"/>
-        <Instrument Name="SF0_INST_45"/>
-        <Instrument Name="SF0_INST_46"/>
-        <Instrument Name="SF0_INST_47"/>
-        <Instrument Name="SF0_INST_48"/>
-        <Instrument/>
-        <Instrument Name="SF0_INST_50"/>
-        <Instrument Name="SF0_INST_51"/>
-        <Instrument Name="SF0_INST_52"/>
-        <Instrument Name="SF0_INST_53"/>
-        <Instrument Name="SF0_INST_54"/>
-        <Instrument Name="SF0_INST_55"/>
-        <Instrument Name="SF0_INST_56"/>
-        <Instrument Name="SF0_INST_57"/>
-        <Instrument Name="SF0_INST_58"/>
-        <Instrument Name="SF0_INST_59"/>
-        <Instrument Name="SF0_INST_60"/>
-        <Instrument Name="SF0_INST_61"/>
-        <Instrument Name="SF0_INST_62"/>
-        <Instrument Name="SF0_INST_63"/>
-        <Instrument Name="SF0_INST_64"/>
-        <Instrument Name="SF0_INST_65"/>
-        <Instrument Name="SF0_INST_66"/>
-        <Instrument Name="SF0_INST_67"/>
-        <Instrument Name="SF0_INST_68"/>
-        <Instrument Name="SF0_INST_69"/>
-        <Instrument Name="SF0_INST_70"/>
-        <Instrument Name="SF0_INST_71"/>
-        <Instrument Name="SF0_INST_72"/>
-        <Instrument Name="SF0_INST_73"/>
-        <Instrument Name="SF0_INST_74"/>
-        <Instrument Name="SF0_INST_75"/>
-        <Instrument Name="SF0_INST_76"/>
-        <Instrument Name="SF0_INST_77"/>
-        <Instrument Name="SF0_INST_78"/>
-        <Instrument Name="SF0_INST_79"/>
-        <Instrument Name="SF0_INST_80"/>
-        <Instrument Name="SF0_INST_81"/>
-        <Instrument Name="SF0_INST_82"/>
-        <Instrument Name="SF0_INST_83"/>
-        <Instrument Name="SF0_INST_84"/>
-        <Instrument Name="SF0_INST_85"/>
-        <Instrument Name="SF0_INST_86"/>
-        <Instrument Name="SF0_INST_87"/>
-        <Instrument Name="SF0_INST_88"/>
-        <Instrument Name="SF0_INST_89"/>
-        <Instrument Name="SF0_INST_90"/>
-        <Instrument Name="SF0_INST_91"/>
-        <Instrument Name="SF0_INST_92"/>
-        <Instrument Name="SF0_INST_93"/>
-        <Instrument Name="SF0_INST_94"/>
-        <Instrument Name="SF0_INST_95"/>
-        <Instrument Name="SF0_INST_96"/>
-        <Instrument Name="SF0_INST_97"/>
-        <Instrument Name="SF0_INST_98"/>
-        <Instrument Name="SF0_INST_99"/>
-        <Instrument Name="SF0_INST_100"/>
-        <Instrument Name="SF0_INST_101"/>
-        <Instrument Name="SF0_INST_102"/>
-        <Instrument Name="SF0_INST_103"/>
-        <Instrument Name="SF0_INST_104"/>
-        <Instrument Name="SF0_INST_105"/>
-        <Instrument Name="SF0_INST_106"/>
-        <Instrument Name="SF0_INST_107"/>
-        <Instrument Name="SF0_INST_108"/>
-        <Instrument Name="SF0_INST_109"/>
-        <Instrument Name="SF0_INST_110"/>
-        <Instrument Name="SF0_INST_111"/>
-        <Instrument Name="SF0_INST_112"/>
-        <Instrument Name="SF0_INST_113"/>
-        <Instrument Name="SF0_INST_114"/>
-        <Instrument Name="SF0_INST_115"/>
-        <Instrument Name="SF0_INST_116"/>
-        <Instrument Name="SF0_INST_117"/>
-        <Instrument Name="SF0_INST_118"/>
-        <Instrument Name="SF0_INST_119"/>
-        <Instrument Name="SF0_INST_120"/>
-        <Instrument Name="SF0_INST_121"/>
+        <Instrument ProgramNumber="0" Name="SF0_INST_0"/>
+        <Instrument ProgramNumber="1" Name="SF0_INST_1"/>
+        <Instrument ProgramNumber="2" Name="SF0_INST_2"/>
+        <Instrument ProgramNumber="3" Name="SF0_INST_3"/>
+        <Instrument ProgramNumber="4" Name="SF0_INST_4"/>
+        <Instrument ProgramNumber="5" Name="SF0_INST_5"/>
+        <Instrument ProgramNumber="6" Name="SF0_INST_6"/>
+        <Instrument ProgramNumber="7" Name="SF0_INST_7"/>
+        <Instrument ProgramNumber="11" Name="SF0_INST_11"/>
+        <Instrument ProgramNumber="8" Name="SF0_INST_8"/>
+        <Instrument ProgramNumber="9" Name="SF0_INST_9"/>
+        <Instrument ProgramNumber="10" Name="SF0_INST_10"/>
+        <Instrument ProgramNumber="12" Name="SF0_INST_12"/>
+        <Instrument ProgramNumber="13" Name="SF0_INST_13"/>
+        <Instrument ProgramNumber="14" Name="SF0_INST_14"/>
+        <Instrument ProgramNumber="16" Name="SF0_INST_16"/>
+        <Instrument ProgramNumber="17" Name="SF0_INST_17"/>
+        <Instrument ProgramNumber="18" Name="SF0_INST_18"/>
+        <Instrument ProgramNumber="19" Name="SF0_INST_19"/>
+        <Instrument ProgramNumber="20" Name="SF0_INST_20"/>
+        <Instrument ProgramNumber="21" Name="SF0_INST_21"/>
+        <Instrument ProgramNumber="22" Name="SF0_INST_22"/>
+        <Instrument ProgramNumber="23" Name="SF0_INST_23"/>
+        <Instrument ProgramNumber="25" Name="SF0_INST_25"/>
+        <Instrument ProgramNumber="104" Name="SF0_INST_104"/>
+        <Instrument ProgramNumber="15" Name="SF0_INST_15"/>
+        <Instrument ProgramNumber="102" Name="SF0_INST_102"/>
+        <Instrument ProgramNumber="105" Name="SF0_INST_105"/>
+        <Instrument ProgramNumber="106" Name="SF0_INST_106"/>
+        <Instrument ProgramNumber="111" Name="SF0_INST_111"/>
+        <Instrument ProgramNumber="26" Name="SF0_INST_26"/>
+        <Instrument ProgramNumber="27" Name="SF0_INST_27"/>
+        <Instrument ProgramNumber="28" Name="SF0_INST_28"/>
+        <Instrument ProgramNumber="29" Name="SF0_INST_29"/>
+        <Instrument ProgramNumber="30" Name="SF0_INST_30"/>
+        <Instrument ProgramNumber="31" Name="SF0_INST_31"/>
+        <Instrument ProgramNumber="33" Name="SF0_INST_33"/>
+        <Instrument ProgramNumber="32" Name="SF0_INST_32"/>
+        <Instrument ProgramNumber="34" Name="SF0_INST_34"/>
+        <Instrument ProgramNumber="35" Name="SF0_INST_35"/>
+        <Instrument ProgramNumber="36" Name="SF0_INST_36"/>
+        <Instrument ProgramNumber="91" Name="SF0_INST_91"/>
+        <Instrument ProgramNumber="52" Name="SF0_INST_52"/>
+        <Instrument ProgramNumber="53" Name="SF0_INST_53"/>
+        <Instrument ProgramNumber="37" Name="SF0_INST_37"/>
+        <Instrument ProgramNumber="38" Name="SF0_INST_38"/>
+        <Instrument ProgramNumber="39" Name="SF0_INST_39"/>
+        <Instrument ProgramNumber="40" Name="SF0_INST_40"/>
+        <Instrument ProgramNumber="41" Name="SF0_INST_41"/>
+        <Instrument ProgramNumber="42" Name="SF0_INST_42"/>
+        <Instrument ProgramNumber="43" Name="SF0_INST_43"/>
+        <Instrument ProgramNumber="44" Name="SF0_INST_44"/>
+        <Instrument ProgramNumber="45" Name="SF0_INST_45"/>
+        <Instrument ProgramNumber="47" Name="SF0_INST_47"/>
+        <Instrument ProgramNumber="48" Name="SF0_INST_48"/>
+        <Instrument ProgramNumber="50" Name="SF0_INST_50"/>
+        <Instrument ProgramNumber="51" Name="SF0_INST_51"/>
+        <Instrument ProgramNumber="54" Name="SF0_INST_54"/>
+        <Instrument ProgramNumber="55" Name="SF0_INST_55"/>
+        <Instrument ProgramNumber="56" Name="SF0_INST_56"/>
+        <Instrument ProgramNumber="57" Name="SF0_INST_57"/>
+        <Instrument ProgramNumber="58" Name="SF0_INST_58"/>
+        <Instrument ProgramNumber="95" Name="SF0_INST_95"/>
+        <Instrument ProgramNumber="59" Name="SF0_INST_59"/>
+        <Instrument ProgramNumber="61" Name="SF0_INST_61"/>
+        <Instrument ProgramNumber="62" Name="SF0_INST_62"/>
+        <Instrument ProgramNumber="63" Name="SF0_INST_63"/>
+        <Instrument ProgramNumber="64" Name="SF0_INST_64"/>
+        <Instrument ProgramNumber="65" Name="SF0_INST_65"/>
+        <Instrument ProgramNumber="66" Name="SF0_INST_66"/>
+        <Instrument ProgramNumber="67" Name="SF0_INST_67"/>
+        <Instrument ProgramNumber="68" Name="SF0_INST_68"/>
+        <Instrument ProgramNumber="69" Name="SF0_INST_69"/>
+        <Instrument ProgramNumber="70" Name="SF0_INST_70"/>
+        <Instrument ProgramNumber="71" Name="SF0_INST_71"/>
+        <Instrument ProgramNumber="72" Name="SF0_INST_72"/>
+        <Instrument ProgramNumber="73" Name="SF0_INST_73"/>
+        <Instrument ProgramNumber="74" Name="SF0_INST_74"/>
+        <Instrument ProgramNumber="75" Name="SF0_INST_75"/>
+        <Instrument ProgramNumber="76" Name="SF0_INST_76"/>
+        <Instrument ProgramNumber="77" Name="SF0_INST_77"/>
+        <Instrument ProgramNumber="78" Name="SF0_INST_78"/>
+        <Instrument ProgramNumber="60" Name="SF0_INST_60"/>
+        <Instrument ProgramNumber="79" Name="SF0_INST_79"/>
+        <Instrument ProgramNumber="80" Name="SF0_INST_80"/>
+        <Instrument ProgramNumber="81" Name="SF0_INST_81"/>
+        <Instrument ProgramNumber="46" Name="SF0_INST_46"/>
+        <Instrument ProgramNumber="99" Name="SF0_INST_99"/>
+        <Instrument ProgramNumber="100" Name="SF0_INST_100"/>
+        <Instrument ProgramNumber="101" Name="SF0_INST_101"/>
+        <Instrument ProgramNumber="103" Name="SF0_INST_103"/>
+        <Instrument ProgramNumber="107" Name="SF0_INST_107"/>
+        <Instrument ProgramNumber="108" Name="SF0_INST_108"/>
+        <Instrument ProgramNumber="109" Name="SF0_INST_109"/>
+        <Instrument ProgramNumber="110" Name="SF0_INST_110"/>
+        <Instrument ProgramNumber="97" Name="SF0_INST_97"/>
+        <Instrument ProgramNumber="24" Name="SF0_INST_24"/>
+        <Instrument ProgramNumber="114" Name="SF0_INST_114"/>
+        <Instrument ProgramNumber="115" Name="SF0_INST_115"/>
+        <Instrument ProgramNumber="116" Name="SF0_INST_116"/>
+        <Instrument ProgramNumber="96" Name="SF0_INST_96"/>
+        <Instrument ProgramNumber="117" Name="SF0_INST_117"/>
+        <Instrument ProgramNumber="118" Name="SF0_INST_118"/>
+        <Instrument ProgramNumber="121" Name="SF0_INST_121"/>
+        <Instrument ProgramNumber="84" Name="SF0_INST_84"/>
+        <Instrument ProgramNumber="87" Name="SF0_INST_87"/>
+        <Instrument ProgramNumber="88" Name="SF0_INST_88"/>
+        <Instrument ProgramNumber="89" Name="SF0_INST_89"/>
+        <Instrument ProgramNumber="90" Name="SF0_INST_90"/>
+        <Instrument ProgramNumber="85" Name="SF0_INST_85"/>
+        <Instrument ProgramNumber="86" Name="SF0_INST_86"/>
+        <Instrument ProgramNumber="83" Name="SF0_INST_83"/>
+        <Instrument ProgramNumber="82" Name="SF0_INST_82"/>
+        <Instrument ProgramNumber="113" Name="SF0_INST_113"/>
+        <Instrument ProgramNumber="92" Name="SF0_INST_92"/>
+        <Instrument ProgramNumber="93" Name="SF0_INST_93"/>
+        <Instrument ProgramNumber="94" Name="SF0_INST_94"/>
+        <Instrument ProgramNumber="98" Name="SF0_INST_98"/>
+        <Instrument ProgramNumber="112" Name="SF0_INST_112"/>
+        <Instrument ProgramNumber="119" Name="SF0_INST_119"/>
+        <Instrument ProgramNumber="120" Name="SF0_INST_120"/>
     </Instruments>
     <Drums>
         <Drum Name="SF0_DRUM_0"/>

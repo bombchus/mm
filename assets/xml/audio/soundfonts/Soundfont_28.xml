@@ -6,17 +6,12 @@
         <Envelope Name="Env2"/>
     </Envelopes>
     <Instruments>
-        <Instrument Name="SF28_INST_0"/>
-        <Instrument/>
-        <Instrument Name="SF28_INST_2"/>
-        <Instrument Name="SF28_INST_3"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF28_INST_6"/>
-        <Instrument Name="SF28_INST_7"/>
-        <Instrument/>
-        <Instrument/>
-        <Instrument Name="SF28_INST_10"/>
-        <Instrument Name="SF28_INST_11"/>
+        <Instrument ProgramNumber="0" Name="SF28_INST_0"/>
+        <Instrument ProgramNumber="2" Name="SF28_INST_2"/>
+        <Instrument ProgramNumber="3" Name="SF28_INST_3"/>
+        <Instrument ProgramNumber="6" Name="SF28_INST_6"/>
+        <Instrument ProgramNumber="7" Name="SF28_INST_7"/>
+        <Instrument ProgramNumber="10" Name="SF28_INST_10"/>
+        <Instrument ProgramNumber="11" Name="SF28_INST_11"/>
     </Instruments>
 </SoundFont>
