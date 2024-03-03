@@ -1690,13 +1690,16 @@ usage(const char *progname)
 int
 main(int argc, char **argv)
 {
+#define NUM_REQUIRED_ARGS 4
+#define MAX_OPTIONAL_ARGS 1
     char *filename_in = NULL;
     char *filename_out_c = NULL;
     char *filename_out_h = NULL;
+    char *filename_out_name = NULL;
     xmlDocPtr document;
     soundfont sf;
 
-    if (argc != 4 && argc != 5)
+    if (argc != 1 + NUM_REQUIRED_ARGS && argc != 1 + NUM_REQUIRED_ARGS + MAX_OPTIONAL_ARGS)
         usage(argv[0]);
 
     int argn = 0;
@@ -1715,13 +1718,16 @@ main(int argc, char **argv)
                 case 2:
                     filename_out_h = argv[i];
                     break;
+                case 3:
+                    filename_out_name = argv[i];
+                    break;
                 default:
                     usage(argv[0]);
             }
             argn++;
         }
     }
-    if (argn != 3)
+    if (argn != NUM_REQUIRED_ARGS)
         usage(argv[0]);
 
     document = xmlReadFile(filename_in, NULL, XML_PARSE_NONET);
@@ -1856,9 +1862,11 @@ main(int argc, char **argv)
     fprintf(out_h, "#endif\n");
     fclose(out_h);
 
-    // emit assembly include
+    // emit name marker
 
-    // TODO
+    FILE *out_name = fopen(filename_out_name, "w");
+    fprintf(out_name, "%s", sf.info.name);
+    fclose(out_name);
 
     // done
 

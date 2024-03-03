@@ -286,11 +286,11 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
                 // printf("comm: { %d, %u, %d, %g, \"%c%c%c%c\" }\n", comm.numChannels, num_samples, comm.sampleSize,
                 //        sample_rate, comp_type >> 24, comp_type >> 16, comp_type >> 8, comp_type);
 
-                // if (chunk_size.value > sizeof(aiff_COMM) + 4) {
-                //     char compression_name[257];
-                //     read_pstring(in, compression_name);
-                //     printf("%s\n", compression_name);
-                // }
+                if (chunk_size.value > sizeof(aiff_COMM) + 4) {
+                    char compression_name[257];
+                    read_pstring(in, compression_name);
+                    // printf("%s\n", compression_name);
+                }
                 has_comm = true;
             } break;
 
@@ -489,7 +489,7 @@ aiff_aifc_common_read(container_data *out, FILE *in, UNUSED bool matching, uint3
         if (read_size > chunk_size.value)
             error("overran chunk: %lu vs %u\n", read_size, chunk_size.value);
         else if (read_size < chunk_size.value)
-            warning("did not read entire chunk: %lu vs %u\n", read_size, chunk_size.value);
+            warning("did not read entire %*s chunk: %lu vs %u", 4,cc4, read_size, chunk_size.value);
 
         fseek(in, start + 8 + chunk_size.value, SEEK_SET);
     }

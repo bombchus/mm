@@ -560,22 +560,21 @@ $(BUILD_DIR)/assets/audio/samplebanks/%.o: assets/audio/samplebanks/%.xml $(AIFC
 
 # also assemble the soundfonts and generate the associated headers... TODO have sfc handle dependency generation?
 
-.PRECIOUS: $(BUILD_DIR)/assets/audio/soundfonts/%.c $(BUILD_DIR)/assets/audio/soundfonts/%.h
-$(BUILD_DIR)/assets/audio/soundfonts/%.c $(BUILD_DIR)/assets/audio/soundfonts/%.h: assets/audio/soundfonts/%.xml $(AIFC_FILES) $(SAMPLEBANK_XMLS)
+.PRECIOUS: $(BUILD_DIR)/assets/audio/soundfonts/%.c $(BUILD_DIR)/assets/audio/soundfonts/%.h $(BUILD_DIR)/assets/audio/soundfonts/%.name
+$(BUILD_DIR)/assets/audio/soundfonts/%.c $(BUILD_DIR)/assets/audio/soundfonts/%.h $(BUILD_DIR)/assets/audio/soundfonts/%.name: assets/audio/soundfonts/%.xml $(AIFC_FILES) $(SAMPLEBANK_XMLS)
 # This rule can be triggered for either the .c or .h file, so $@ may refer to either the .c or .h file. A simple
 # substitution $(@:.c=.h) will fail ~50% of the time with -j. Instead, don't assume anything about the suffix of $@.
-	$(SFC) $< $(@:$(suffix $(@F))=.c) $(@:$(suffix $(@F))=.h)
+	$(SFC) $< $(@:$(suffix $(@F))=.c) $(@:$(suffix $(@F))=.h) $(@:$(suffix $(@F))=.name)
 
-$(BUILD_DIR)/assets/audio/soundfonts/%.o: $(BUILD_DIR)/assets/audio/soundfonts/%.c $(SAMPLEBANK_O_FILES)
+$(BUILD_DIR)/assets/audio/soundfonts/%.o: $(BUILD_DIR)/assets/audio/soundfonts/%.c $(BUILD_DIR)/assets/audio/soundfonts/%.name $(SAMPLEBANK_O_FILES)
 # compile c to unlinked object
 	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -I include/audio -o $(@:.o=.tmp) $<
 # partial link
 	@$(LD) -r -T include/audio/sf.ld $(@:.o=.tmp) -o $(@:.o=.tmp2)
 # patch defined symbols to be ABS symbols so that they remain file-relative offsets forever
 	@$(ELFPATCH) $(@:.o=.tmp2) $(@:.o=.tmp2)
-# write start and size symbols afterwards (TODO: source name shouldn't have to be the symbolic name..)
-# TODO have sfc write a SoundfontX.name file containing the symbolic name and then cat that file here?
-	@$(OBJCOPY) --add-symbol $(@F:.o=_Start)=.rodata:0,global --redefine-sym __LEN__=$(@F:.o=_Size) $(@:.o=.tmp2) $@
+# write start and size symbols afterwards, source name != symbolic name so source symbolic name from the .name file written by sfc
+	@$(OBJCOPY) --add-symbol $$(cat $(<:.c=.name))_Start=.rodata:0,global --redefine-sym __LEN__=$(@F:.o=_Size) $(@:.o=.tmp2) $@
 # cleanup temp files
 	@$(RM) $(@:.o=.tmp) $(@:.o=.tmp2)
 # TESTING: link with samplebanks and dump binary
@@ -596,23 +595,18 @@ $(BUILD_DIR)/assets/audio/sequences/%.o: assets/audio/sequences/%.seq $(SOUNDFON
 # put together the tables
 
 $(BUILD_DIR)/assets/audio/samplebank_table.h: $(SAMPLEBANK_XMLS)
-# TODO switch from dir to listing the files? Should do this to allow samplebank xmls to be sourced from several dirs
-	$(ATBLGEN) -banks $@ assets/audio/samplebanks
+	$(ATBLGEN) -banks $@ $^
 
 $(BUILD_DIR)/assets/audio/soundfont_table.h: $(SOUNDFONT_XMLS)
-# TODO switch from dir to listing the files? Should do this to allow soundfont xmls to be sourced from several dirs
-	$(ATBLGEN) -fonts $@ assets/audio/soundfonts
+	$(ATBLGEN) -fonts $@ $^
 
-SEQ_ORDER_DEFS := -DDEFINE_SEQUENCE_PTR\(name,seqId,_2,_3,_4,_5\)=PTR\(name,seqId\) \
+SEQ_ORDER_DEFS := -DDEFINE_SEQUENCE_PTR\(name,seqId,_2,_3,_4,_5\)=*\(name,seqId\) \
                   -DDEFINE_SEQUENCE\(name,seqId,_2,_3,_4,_5\)=\(name,seqId\)
 $(BUILD_DIR)/include/tables/sequence_order.in: $(SEQUENCE_TABLE)
 	$(CPP) $(CPPFLAGS) $< $(SEQ_ORDER_DEFS) -o $@
 
 $(BUILD_DIR)/assets/audio/sequence_font_table.s: $(BUILD_DIR)/include/tables/sequence_order.in $(SEQUENCE_O_FILES)
-# TODO switch from dir to listing the files in sequence table order? Should do this to allow sequence xmls to be sourced from several dirs
-# would need some kind of validation that the files in the list actually exist.. (but we can do this in atblgen?)
-# the real problem is the sequence table only lists names, and names != filenames in general, we can add filename to the table but seems dumb
-	$(ATBLGEN) -sequences $@ $(BUILD_DIR)/include/tables/sequence_order.in $(BUILD_DIR)/assets/audio/sequences
+	$(ATBLGEN) -sequences $@ $^
 
 # build the tables into objects, move data -> rodata
 
@@ -659,12 +653,10 @@ $(BUILD_DIR)/assets/audio/sequence_font_table.o: $(BUILD_DIR)/assets/audio/seque
 $(BUILD_DIR)/src/audio/session_config.o: $(BUILD_DIR)/assets/audio/soundfont_sizes.h $(BUILD_DIR)/assets/audio/sequence_sizes.h
 
 $(BUILD_DIR)/assets/audio/soundfont_sizes.h: $(SOUNDFONT_O_FILES)
-# TODO switch from dir to listing the files? Should do this to allow soundfont xmls to be sourced from several dirs
-	$(AFILE_SIZES) $@ $(BUILD_DIR)/assets/audio/soundfonts NUM_SOUNDFONTS SOUNDFONT_SIZES
+	$(AFILE_SIZES) $@ NUM_SOUNDFONTS SOUNDFONT_SIZES $^
 
 $(BUILD_DIR)/assets/audio/sequence_sizes.h: $(SEQUENCE_O_FILES)
-# TODO switch from dir to listing the files? Should do this to allow soundfont xmls to be sourced from several dirs
-	$(AFILE_SIZES) $@ $(BUILD_DIR)/assets/audio/sequences NUM_SEQUENCES SEQUENCE_SIZES
+	$(AFILE_SIZES) $@ NUM_SEQUENCES SEQUENCE_SIZES $^
 
 -include $(DEP_FILES)
 

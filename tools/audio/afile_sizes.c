@@ -8,36 +8,13 @@
 static int
 usage(const char *progname)
 {
-    fprintf(stderr, "Usage: %s <header_out.h> <object files directory> <num_def> <header_guard>\n", progname);
+    fprintf(stderr, "Usage: %s <header_out.h> <num define> <header guard> <object files...>\n", progname);
     return EXIT_FAILURE;
 }
 
-static bool
-is_ofile(const char *path)
-{
-    size_t len = strlen(path);
-
-    if (len < 2)
-        return false;
-    if (path[len - 2] == '.' && tolower(path[len - 1]) == 'o')
-        return true;
-
-    return false;
-}
-
-struct afile_udata {
-    FILE *out;
-    size_t total_num;
-};
-
 static void
-file_handler(const char *path, void *udata)
+file_handler(const char *path, FILE *out, size_t *total_num)
 {
-    struct afile_udata *audata = (struct afile_udata *)udata;
-
-    if (!is_ofile(path))
-        return;
-
     size_t data_size;
     void *data = elf32_read(path, &data_size);
 
@@ -51,8 +28,8 @@ file_handler(const char *path, void *udata)
     if (symtab == NULL)
         error("No strtab?");
 
-    char *seq_name = NULL;
-    size_t seq_size = 0;
+    char *object_name = NULL;
+    size_t object_size = 0;
 
     Elf32_Sym *sym = GET_PTR(data, symtab->sh_offset);
     Elf32_Sym *sym_end = GET_PTR(data, symtab->sh_offset + symtab->sh_size);
@@ -73,30 +50,32 @@ file_handler(const char *path, void *udata)
             if (sym->st_shndx != SHN_ABS)
                 continue;
 
-            seq_size = sym->st_value;
+            object_size = sym->st_value;
 
-            if (seq_name != NULL)
+            if (object_name != NULL)
                 break;
 
             continue;
         }
 
         if (name_len > 6 && strcmp(&sym_name[name_len - 6], "_Start") == 0) {
-            seq_name = (char *)sym_name;
-            seq_name[name_len - 6] = '\0';
+            object_name = (char *)sym_name;
+            object_name[name_len - 6] = '\0';
 
-            if (seq_size != 0)
+            if (object_size != 0)
                 break;
 
             continue;
         }
     }
 
-    if (seq_name == NULL)
-        error("No start symbol?");
+    if (object_name == NULL)
+        error("Object \"%s\" has no start symbol?", path);
+    if (object_size == 0)
+        error("Object \"%s\" has no size symbol?", path);
 
-    fprintf(audata->out, "#define %s_SIZE 0x%lX\n", seq_name, seq_size);
-    audata->total_num++;
+    fprintf(out, "#define %s_SIZE 0x%lX\n", object_name, object_size);
+    (*total_num)++;
 
     free(data);
 }
@@ -106,13 +85,12 @@ main(int argc, char **argv)
 {
     const char *progname = argv[0];
 
-    if (argc != 5)
+    if (argc < 5) // progname, 3 required args, at least 1 input file
         return usage(progname);
 
     const char *header_out = argv[1];
-    const char *dir_root = argv[2];
-    const char *num_def = argv[3];
-    const char *header_guard = argv[4];
+    const char *num_def = argv[2];
+    const char *header_guard = argv[3];
 
     FILE *out = fopen(header_out, "w");
     if (out == NULL)
@@ -126,8 +104,11 @@ main(int argc, char **argv)
             // clang-format on
             header_guard, header_guard);
 
-    struct afile_udata data = { out, 0 };
-    dir_walk_rec(dir_root, file_handler, &data);
+    size_t total_num = 0;
+
+    for (int i = 4; i < argc; i++) {
+        file_handler(argv[i], out, &total_num);
+    }
 
     fprintf(out,
             // clang-format off
@@ -136,7 +117,7 @@ main(int argc, char **argv)
                                 "\n"
            "#endif"             "\n",
             // clang-format on
-            num_def, data.total_num);
+            num_def, total_num);
     fclose(out);
 
     return EXIT_SUCCESS;

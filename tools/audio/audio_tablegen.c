@@ -102,7 +102,7 @@ is_ofile(const char *path)
 }
 
 static void
-read_sequence_elf_file(const char *path, void *udata)
+read_sequence_elf_file(const char *path, struct sequences_file_info *file_info)
 {
     if (!is_ofile(path))
         return;
@@ -188,8 +188,6 @@ read_sequence_elf_file(const char *path, void *udata)
     if (seq_name == NULL)
         error("No start symbol?");
 
-    struct sequences_file_info *file_info = (struct sequences_file_info *)udata;
-
     size_t n = file_info->num_files;
 
     // TODO double alloc size for fast
@@ -207,7 +205,7 @@ read_sequence_elf_file(const char *path, void *udata)
 }
 
 static void
-read_samplebank_xml_file(const char *path, UNUSED void *udata)
+read_samplebank_xml_file(const char *path, struct samplebank_file_info *finfo)
 {
     if (!is_xml(path))
         return;
@@ -218,8 +216,6 @@ read_samplebank_xml_file(const char *path, UNUSED void *udata)
     xmlDocPtr document = xmlReadFile(path, NULL, XML_PARSE_NONET);
     if (document == NULL)
         error("Could not read xml file \"%s\"\n", path);
-
-    struct samplebank_file_info *finfo = (struct samplebank_file_info *)udata;
 
     size_t n = finfo->num_files;
     finfo->num_files++;
@@ -254,7 +250,7 @@ validate_samplebank_index(samplebank *sb, int ptr_idx)
 }
 
 static void
-read_soundfont_xml_file(const char *path, UNUSED void *udata)
+read_soundfont_xml_file(const char *path, struct soundfont_file_info *finfo)
 {
     if (!is_xml(path))
         return;
@@ -289,8 +285,6 @@ read_soundfont_xml_file(const char *path, UNUSED void *udata)
         dd_idx = validate_samplebank_index(&sf->sbdd, sf->info.pointer_index); // TODO pointer_index_dd
 
     // Build a linked list, insertion-sort based on sf->info.index, error on duplicates
-
-    struct soundfont_file_info *finfo = (struct soundfont_file_info *)udata;
 
     struct soundfont_file_info *link = malloc(sizeof(struct soundfont_file_info));
     link->soundfont = sf;
@@ -365,20 +359,13 @@ read_seq_order(struct seq_order *order, const char *path)
         // printf("%c (%d, %d, %d)\n", *p, newline, eol, gotname);
 
         if (newline) {
+            // Started a new line, look for either an opening '(' or '*(', anything else is invalid.
+
             bool isptr = false;
-            // Started a new line, look for either an opening '(' or 'PTR(', anything else is invalid.
-            if (*p == 'P') {
-                // Should be "PTR"
-                p++;
-                if (*p != 'T')
-                    goto malformed;
-                p++;
-                if (*p != 'R')
-                    goto malformed;
+            if (*p == '*') {
                 p++;
                 isptr = true;
             }
-
             // Record whether it was a pointer or not
             ptr_flags[i] = isptr;
 
@@ -452,13 +439,15 @@ malformed:
 }
 
 int
-tablegen_samplebanks(const char *sb_hdr_out, const char *samplebanks_path)
+tablegen_samplebanks(const char *sb_hdr_out, const char **samplebanks_paths, int num_samplebank_files)
 {
     struct samplebank_file_info finfo;
     finfo.samplebanks = NULL;
     finfo.num_files = 0;
 
-    dir_walk_rec(samplebanks_path, read_samplebank_xml_file, &finfo);
+    for (int i = 0; i < num_samplebank_files; i++) {
+        read_samplebank_xml_file(samplebanks_paths[i], &finfo);
+    }
 
 #if 0
     for (size_t i = 0; i < finfo.num_files; i++) {
@@ -590,13 +579,15 @@ tablegen_samplebanks(const char *sb_hdr_out, const char *samplebanks_path)
 }
 
 int
-tablegen_soundfonts(const char *sf_hdr_out, const char *soundfonts_path)
+tablegen_soundfonts(const char *sf_hdr_out, const char **soundfonts_paths, int num_soundfont_files)
 {
     struct soundfont_file_info finfo_base;
     finfo_base.next = NULL;
     finfo_base.soundfont = NULL;
 
-    dir_walk_rec(soundfonts_path, read_soundfont_xml_file, &finfo_base);
+    for (int i = 0; i < num_soundfont_files; i++) {
+        read_soundfont_xml_file(soundfonts_paths[i], &finfo_base);
+    }
 
     FILE *out = fopen(sf_hdr_out, "w");
 
@@ -629,6 +620,8 @@ tablegen_soundfonts(const char *sf_hdr_out, const char *soundfonts_path)
                 sf->info.name, sf->info.medium, sf->info.cache_policy, finfo->normal_bank_index, finfo->dd_bank_index,
                 sf->info.index, sf->info.index, sf->info.index);
     }
+
+    fclose(out);
 
     return EXIT_SUCCESS;
 }
@@ -666,7 +659,8 @@ gen_sequence_font_table(FILE *out, struct seqdata **sequences, size_t num_sequen
 }
 
 int
-tablegen_sequences(const char *seq_font_tbl_out, const char *sequences_path, const char *seq_order_path)
+tablegen_sequences(const char *seq_font_tbl_out, const char *seq_order_path, const char **sequences_paths,
+                   int num_sequence_files)
 {
     struct seq_order order;
     read_seq_order(&order, seq_order_path);
@@ -679,7 +673,9 @@ tablegen_sequences(const char *seq_font_tbl_out, const char *sequences_path, con
     seq_info.file_data = NULL;
     seq_info.num_files = 0;
 
-    dir_walk_rec(sequences_path, read_sequence_elf_file, &seq_info);
+    for (int i = 0; i < num_sequence_files; i++) {
+        read_sequence_elf_file(sequences_paths[i], &seq_info);
+    }
 
 #if 0
     printf(                 "\n");
@@ -784,10 +780,10 @@ usage(const char *progname)
 {
     fprintf(stderr,
             // clang-format off
-           "Usage:"                                                                             "\n"
-           "    %s -banks     <samplebank_table.h> <samplebank xml directory>"                  "\n"
-           "    %s -fonts     <soundfont_table.h> <soundfont xml directory>"                    "\n"
-           "    %s -sequences <seq_font_table.s> <sequence_order.in> <sequence elf directory>"  "\n",
+           "Usage:"                                                                                 "\n"
+           "    %s -banks     <samplebank_table.h> <samplebank xml files...>"                       "\n"
+           "    %s -fonts     <soundfont_table.h> <soundfont xml files...>"                         "\n"
+           "    %s -sequences <seq_font_table.s> <sequence_order.in> <sequence object files...>"    "\n",
             // clang-format on
             progname, progname, progname);
     return EXIT_FAILURE;
@@ -796,9 +792,9 @@ usage(const char *progname)
 int
 main(int argc, char **argv)
 {
-    // -banks -o [header_out] [xml dir]
-    // -fonts -o [header_out] [xml dir]
-    // -sequences -o [seq_font_tbl_out] [order] [ofile dir]
+    // -banks -o [header_out] [files...]
+    // -fonts -o [header_out] [files...]
+    // -sequences -o [seq_font_tbl_out] [order] [files...]
     int ret = EXIT_SUCCESS;
 
     const char *progname = argv[0];
@@ -809,30 +805,33 @@ main(int argc, char **argv)
     const char *mode = argv[1];
 
     if (strequ(mode, "-banks")) {
-        if (argc != 4)
+        if (argc < 4)
             return usage(progname);
 
         const char *sb_hdr_out = argv[2];
-        const char *samplebanks_path = argv[3];
+        const char **samplebanks_paths = (const char **)&argv[3];
+        int num_samplebank_files = argc - 3;
 
-        ret = tablegen_samplebanks(sb_hdr_out, samplebanks_path);
+        ret = tablegen_samplebanks(sb_hdr_out, samplebanks_paths, num_samplebank_files);
     } else if (strequ(mode, "-fonts")) {
-        if (argc != 4)
+        if (argc < 4)
             return usage(progname);
 
         const char *sf_hdr_out = argv[2];
-        const char *soundfonts_path = argv[3];
+        const char **soundfonts_paths = (const char **)&argv[3];
+        int num_soundfont_files = argc - 3;
 
-        ret = tablegen_soundfonts(sf_hdr_out, soundfonts_path);
+        ret = tablegen_soundfonts(sf_hdr_out, soundfonts_paths, num_soundfont_files);
     } else if (strequ(mode, "-sequences")) {
-        if (argc != 5)
+        if (argc < 5)
             return usage(progname);
 
         const char *seq_font_tbl_out = argv[2];
         const char *seq_order_path = argv[3];
-        const char *sequences_path = argv[4];
+        const char **sequences_paths = (const char **)&argv[4];
+        int num_sequence_files = argc - 4;
 
-        ret = tablegen_sequences(seq_font_tbl_out, sequences_path, seq_order_path);
+        ret = tablegen_sequences(seq_font_tbl_out, seq_order_path, sequences_paths, num_sequence_files);
     } else {
         return usage(progname);
     }

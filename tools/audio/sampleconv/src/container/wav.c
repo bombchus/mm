@@ -384,7 +384,7 @@ wav_read(container_data *out, const char *path, UNUSED bool matching)
         if (read_size > chunk_size.value)
             error("overran chunk");
         else if (!skipped && read_size < chunk_size.value)
-            warning("did not read entire chunk: %lu vs %u", read_size, chunk_size.value);
+            warning("did not read entire %*s chunk: %lu vs %u", 4,cc4, read_size, chunk_size.value);
 
         fseek(in, start + 8 + chunk_size.value, SEEK_SET);
     }
