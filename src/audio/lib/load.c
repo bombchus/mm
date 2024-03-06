@@ -1158,8 +1158,8 @@ void* AudioLoad_AsyncLoadInner(s32 tableType, s32 id, s32 nChunks, s32 retData, 
         }
 
         if (medium == MEDIUM_UNK) {
-            AudioLoad_StartAsyncLoadUnkMedium((s16)table->header.unkMediumParam, romAddr, ramAddr, size, medium, nChunks,
-                                              retQueue, MK_ASYNC_MSG(retData, tableType, realId, loadStatus));
+            AudioLoad_StartAsyncLoadUnkMedium((s16)table->header.unkMediumParam, romAddr, ramAddr, size, medium,
+                                              nChunks, retQueue, MK_ASYNC_MSG(retData, tableType, realId, loadStatus));
         } else {
             AudioLoad_StartAsyncLoad(romAddr, ramAddr, size, medium, nChunks, retQueue,
                                      MK_ASYNC_MSG(retData, tableType, realId, loadStatus));

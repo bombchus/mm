@@ -611,8 +611,8 @@ $(BUILD_DIR)/assets/audio/sequence_font_table.s: $(BUILD_DIR)/include/tables/seq
 # build the tables into objects, move data -> rodata
 
 $(BUILD_DIR)/src/audio/tables/samplebank_table.o: src/audio/tables/samplebank_table.c $(BUILD_DIR)/assets/audio/samplebank_table.h
-	$(CC_CHECK) -I build -I $(BUILD_DIR)/assets $<
-	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -I build -I $(BUILD_DIR)/assets -o $(@:.o=.tmp) $<
+	$(CC_CHECK) $<
+	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -o $(@:.o=.tmp) $<
 	@$(LD) -r -T include/audio/atbl_rdata.ld $(@:.o=.tmp) -o $@
 	@$(RM) $(@:.o=.tmp)
 	$(RM_MDEBUG)
@@ -621,8 +621,8 @@ $(BUILD_DIR)/src/audio/tables/samplebank_table.o: src/audio/tables/samplebank_ta
 # Can't compare this due to pointers
 
 $(BUILD_DIR)/src/audio/tables/soundfont_table.o: src/audio/tables/soundfont_table.c $(BUILD_DIR)/assets/audio/soundfont_table.h $(SOUNDFONT_HEADERS)
-	$(CC_CHECK) -I build -I $(BUILD_DIR)/assets $<
-	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -I build -I $(BUILD_DIR)/assets -o $(@:.o=.tmp) $<
+	$(CC_CHECK) $<
+	$(CC) -c $(CFLAGS) $(MIPS_VERSION) $(OPTFLAGS) -o $(@:.o=.tmp) $<
 	@$(LD) -r -T include/audio/atbl_rdata.ld $(@:.o=.tmp) -o $@
 	@$(RM) $(@:.o=.tmp)
 	$(RM_MDEBUG)

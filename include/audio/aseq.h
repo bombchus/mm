@@ -526,7 +526,7 @@ _RESET_SECTION
     .endif
 .endm
 
-/* Long encoded numbers a la MIDI, TODO bounds check */
+/* Long encoded numbers a la MIDI */
 .macro _var_long x
     _check_arg_bitwidth_u \x, 15
 
@@ -538,6 +538,7 @@ _RESET_SECTION
     .if (\x >= 0x80)
         _var_long \x
     .else
+        _check_arg_bitwidth_u \x, 8
         .byte \x
     .endif
 .endm

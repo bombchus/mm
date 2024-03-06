@@ -202,13 +202,13 @@ validate_samplebank_index(samplebank *sb, int ptr_idx)
 }
 
 int
-tablegen_soundfonts(const char *sf_hdr_out, const char **soundfonts_paths, int num_soundfont_files)
+tablegen_soundfonts(const char *sf_hdr_out, char **soundfonts_paths, int num_soundfont_files)
 {
     soundfont *soundfonts = malloc(num_soundfont_files * sizeof(soundfont));
     int max_index = 0;
 
     for (int i = 0; i < num_soundfont_files; i++) {
-        const char *path = soundfonts_paths[i];
+        char *path = soundfonts_paths[i];
 
         if (!is_xml(path))
             error("Not an xml file? (\"%s\")", path);
@@ -223,6 +223,12 @@ tablegen_soundfonts(const char *sf_hdr_out, const char **soundfonts_paths, int n
 
         soundfont *sf = &soundfonts[i];
 
+        // Transform the xml path into a header include path
+        // Assumption: replacing .xml -> .h forms a valid header include path
+        size_t pathlen = strlen(path);
+        path[pathlen - 3] = 'h';
+        path[pathlen - 2] = '\0';
+
         read_soundfont_info(sf, root);
 
         if (sf->info.index > max_index)
@@ -233,6 +239,7 @@ tablegen_soundfonts(const char *sf_hdr_out, const char **soundfonts_paths, int n
         soundfont *soundfont;
         int normal_bank_index;
         int dd_bank_index;
+        char *name;
     };
     struct soundfont_file_info *finfo = calloc(max_index + 1, sizeof(struct soundfont_file_info));
 
@@ -255,6 +262,7 @@ tablegen_soundfonts(const char *sf_hdr_out, const char **soundfonts_paths, int n
         finfo[sf->info.index].soundfont = &soundfonts[i];
         finfo[sf->info.index].normal_bank_index = normal_idx;
         finfo[sf->info.index].dd_bank_index = dd_idx;
+        finfo[sf->info.index].name = soundfonts_paths[i];
     }
 
     // Make sure there are no gaps
@@ -277,8 +285,12 @@ tablegen_soundfonts(const char *sf_hdr_out, const char **soundfonts_paths, int n
     for (int i = 0; i < max_index + 1; i++) {
         soundfont *sf = finfo[i].soundfont;
 
-        fprintf(out, "DEFINE_SOUNDFONT(%s, %s, %s, %d, %d, SF%d_NUM_INSTRUMENTS, SF%d_NUM_DRUMS, SF%d_NUM_SFX)\n",
-                sf->info.name, sf->info.medium, sf->info.cache_policy, finfo[i].normal_bank_index,
+        fprintf(out,
+                // clang-format off
+               "#include \"%s\""                                                                            "\n"
+               "DEFINE_SOUNDFONT(%s, %s, %s, %d, %d, SF%d_NUM_INSTRUMENTS, SF%d_NUM_DRUMS, SF%d_NUM_SFX)"   "\n",
+                // clang-format on
+                finfo[i].name, sf->info.name, sf->info.medium, sf->info.cache_policy, finfo[i].normal_bank_index,
                 finfo[i].dd_bank_index, sf->info.index, sf->info.index, sf->info.index);
     }
 
@@ -678,7 +690,7 @@ main(int argc, char **argv)
             return usage(progname);
 
         const char *sf_hdr_out = argv[2];
-        const char **soundfonts_paths = (const char **)&argv[3];
+        char **soundfonts_paths = &argv[3];
         int num_soundfont_files = argc - 3;
 
         ret = tablegen_soundfonts(sf_hdr_out, soundfonts_paths, num_soundfont_files);

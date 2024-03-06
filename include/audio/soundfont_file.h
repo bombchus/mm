@@ -7,7 +7,6 @@
 #include "load.h"
 #include "soundfont.h"
 
-#define NO_REORDER __attribute__((no_reorder))
 #define DATA __attribute__((section(".data")))
 
 #ifndef GLUE
