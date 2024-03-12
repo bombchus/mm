@@ -203,7 +203,7 @@ class ArgInstr(ArgU8):
         font0 : AudiobankFile = disas.used_fonts[0]
 
         if self.value in font0.instrument_index_map:
-            name = font0.instrument_name(self.value)
+            name = f"SF{font0.bank_num}_{font0.instrument_name(self.value)}"
         else:
             print(f"Invalid instrument sourced from {font0.name}: {self.value}")
             name = f"{self.value} /* invalid instrument */"

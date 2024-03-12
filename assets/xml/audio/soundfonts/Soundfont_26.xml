@@ -7,9 +7,9 @@
         <Envelope Name="Env3"/>
     </Envelopes>
     <Instruments>
-        <Instrument ProgramNumber="0" Name="SF26_INST_0"/>
-        <Instrument ProgramNumber="1" Name="SF26_INST_1"/>
-        <Instrument ProgramNumber="2" Name="SF26_INST_2"/>
-        <Instrument ProgramNumber="3" Name="SF26_INST_3"/>
+        <Instrument ProgramNumber="0" Name="INST_0"/>
+        <Instrument ProgramNumber="1" Name="INST_1"/>
+        <Instrument ProgramNumber="2" Name="INST_2"/>
+        <Instrument ProgramNumber="3" Name="INST_3"/>
     </Instruments>
 </SoundFont>

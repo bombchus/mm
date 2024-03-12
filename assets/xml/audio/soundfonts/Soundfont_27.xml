@@ -8,16 +8,16 @@
         <Envelope Name="Env4"/>
     </Envelopes>
     <Instruments>
-        <Instrument ProgramNumber="0" Name="SF27_INST_0"/>
-        <Instrument ProgramNumber="1" Name="SF27_INST_1"/>
-        <Instrument ProgramNumber="2" Name="SF27_INST_2"/>
-        <Instrument ProgramNumber="3" Name="SF27_INST_3"/>
+        <Instrument ProgramNumber="0" Name="INST_0"/>
+        <Instrument ProgramNumber="1" Name="INST_1"/>
+        <Instrument ProgramNumber="2" Name="INST_2"/>
+        <Instrument ProgramNumber="3" Name="INST_3"/>
     </Instruments>
     <Drums>
-        <Drum Name="SF27_DRUM_0"/>
-        <Drum Name="SF27_DRUM_1"/>
-        <Drum Name="SF27_DRUM_2"/>
-        <Drum Name="SF27_DRUM_3"/>
-        <Drum Name="SF27_DRUM_4"/>
+        <Drum Name="DRUM_0"/>
+        <Drum Name="DRUM_1"/>
+        <Drum Name="DRUM_2"/>
+        <Drum Name="DRUM_3"/>
+        <Drum Name="DRUM_4"/>
     </Drums>
 </SoundFont>

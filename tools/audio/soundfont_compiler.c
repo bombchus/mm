@@ -304,25 +304,6 @@ read_envelopes_info(soundfont *sf, xmlNodePtr envelopes)
 void
 read_instrs_info(soundfont *sf, xmlNodePtr instrs)
 {
-    // <!-- Specifying a release value in the instrument/drum is optional, if not specified it will take the release
-    // from the envelope -->
-    // <!-- Specifying a base note is optional, it can be read from the sample INST chunk (but only if it exists) -->
-    // <Instrument Name="STEP_GROUND" Envelope="Env0" Release="" BaseNote="" Sample="step_ground.aifc"/>
-    // <Instrument Name="STEP_SAND" Envelope="" Sample=""/>
-
-    // <!-- TODO make RangeLo/RangeHi note values instead of raw numbers (but also allow raw numbers) -->
-
-    // <Instrument Name="FIRE_WIND" Envelope="Env0" RangeHi="62">
-    //     <Sample Mid="generic_ice_crackle.aifc"/>
-    //     <Sample High="amb_sandstorm.aifc"/>
-    // </Instrument>
-
-    // <Instrument Name="FIRE_WIND" Envelope="Env0" RangeLo="" RangeHi="62">
-    //     <Sample Low=""/>
-    //     <Sample Mid="generic_ice_crackle.aifc"/>
-    //     <Sample High="amb_sandstorm.aifc"/>
-    // </Instrument>
-
     static const xml_attr_spec instr_spec = {
         {"ProgramNumber", true,  xml_parse_int,          offsetof(instr_data, program_number)   },
         { "Name",         true,  xml_parse_c_identifier, offsetof(instr_data, name)             },
@@ -547,20 +528,16 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
 void
 read_drums_info(soundfont *sf, xmlNodePtr drums)
 {
-    // <!-- TODO how much of this can come from the aifc -->
-    // <Drum Name="TAMBO" SemitoneStart="" SemitoneEnd="" Pan="64" Envelope="Env1" Sample="tambo.aifc"/>
-    // <Drum Name="TAMBO_H" Semitone="" Pan="64" Envelope="Env1" Sample="tambo_h.aifc"/>
-
     static const xml_attr_spec drum_spec = {
-        {"Name",           false, xml_parse_c_identifier, offsetof(drum_data, name)          },
-        { "Semitone",      true,  xml_parse_note_number,  offsetof(drum_data, semitone)      },
-        { "SemitoneStart", true,  xml_parse_note_number,  offsetof(drum_data, semitone_start)},
-        { "SemitoneEnd",   true,  xml_parse_note_number,  offsetof(drum_data, semitone_end)  },
-        { "Pan",           false, xml_parse_int,          offsetof(drum_data, pan)           },
-        { "Envelope",      false, xml_parse_c_identifier, offsetof(drum_data, envelope_name) },
-        { "Sample",        false, xml_parse_c_identifier, offsetof(drum_data, sample_name)   },
-        { "SampleRate",    true,  xml_parse_double,       offsetof(drum_data, sample_rate)   },
-        { "BaseNote",      true,  xml_parse_note_number,  offsetof(drum_data, base_note)     },
+        {"Name",        false, xml_parse_c_identifier, offsetof(drum_data, name)         },
+        { "Note",       true,  xml_parse_note_number,  offsetof(drum_data, note)         },
+        { "NoteStart",  true,  xml_parse_note_number,  offsetof(drum_data, note_start)   },
+        { "NoteEnd",    true,  xml_parse_note_number,  offsetof(drum_data, note_end)     },
+        { "Pan",        false, xml_parse_int,          offsetof(drum_data, pan)          },
+        { "Envelope",   false, xml_parse_c_identifier, offsetof(drum_data, envelope_name)},
+        { "Sample",     false, xml_parse_c_identifier, offsetof(drum_data, sample_name)  },
+        { "SampleRate", true,  xml_parse_double,       offsetof(drum_data, sample_rate)  },
+        { "BaseNote",   true,  xml_parse_note_number,  offsetof(drum_data, base_note)    },
     };
 
     LL_FOREACH(xmlNodePtr, drum_node, drums->children) {
@@ -572,9 +549,9 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
             error("Unexpected element node %s in drums list (line %d)", name, drum_node->line);
 
         drum_data *drum = malloc(sizeof(drum_data));
-        drum->semitone = NOTE_UNSET;
-        drum->semitone_start = NOTE_UNSET;
-        drum->semitone_end = NOTE_UNSET;
+        drum->note = NOTE_UNSET;
+        drum->note_start = NOTE_UNSET;
+        drum->note_end = NOTE_UNSET;
         drum->sample_rate = -1;
         drum->base_note = NOTE_UNSET;
 
@@ -594,18 +571,18 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
             error("Bad envelope name %s (line %d)\n", drum->envelope_name, drum_node->line);
 
         // validate optionals
-        if (drum->semitone == NOTE_UNSET) {
-            if (drum->semitone_start == NOTE_UNSET || drum->semitone_end == NOTE_UNSET)
-                error("Incomplete semitone range specification\n");
+        if (drum->note == NOTE_UNSET) {
+            if (drum->note_start == NOTE_UNSET || drum->note_end == NOTE_UNSET)
+                error("Incomplete note range specification\n");
         } else {
-            if (drum->semitone_start != NOTE_UNSET || drum->semitone_end != NOTE_UNSET)
-                error("Overspecified semitone range\n");
+            if (drum->note_start != NOTE_UNSET || drum->note_end != NOTE_UNSET)
+                error("Overspecified note range\n");
 
-            drum->semitone_start = drum->semitone_end = drum->semitone;
+            drum->note_start = drum->note_end = drum->note;
         }
 
-        if (drum->semitone_end < drum->semitone_start)
-            error("Invalid drum semitone range: %d - %d", drum->semitone_start, drum->semitone_end);
+        if (drum->note_end < drum->note_start)
+            error("Invalid drum note range: %d - %d", drum->note_start, drum->note_end);
 
         drum->sample = sample_data_forname(sf, drum->sample_name);
         if (drum->sample == NULL)
@@ -628,7 +605,7 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
             }
         }
 
-        // printf("DRUM [%2d:%2d] samplerate=%f basenote=%d\n", drum->semitone_start, drum->semitone_end,
+        // printf("DRUM [%2d:%2d] samplerate=%f basenote=%d\n", drum->note_start, drum->note_end,
         //        drum->sample_rate, drum->sample->base_note);
 
         // link
@@ -647,10 +624,6 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
 void
 read_sfx_info(soundfont *sf, xmlNodePtr effects)
 {
-    // <Effect Name="foo" Sample="bar.aifc"/>
-    // <Effect/> (don't emit a struct and place a NULL in the array at this location)
-    // sample may be "NONE" in which case tuning is 0
-
     static const xml_attr_spec effect_spec = {
         {"Name",        false, xml_parse_c_identifier, offsetof(sfx_data, name)       },
         { "Sample",     false, xml_parse_c_identifier, offsetof(sfx_data, sample_name)},
@@ -710,10 +683,6 @@ typedef struct {
 void
 read_samples_info(soundfont *sf, xmlNodePtr samples)
 {
-    //  <Samples IsDD="false" Cached="false">
-    //      <Sample Name="STEP_GROUND" SampleRate="32000" BaseNote="C4" IsDD="false" Cached="false">
-    //  </Samples>
-
     static const xml_attr_spec samples_spec = {
         {"IsDD",    true, xml_parse_bool, offsetof(sample_data_defaults, is_dd) },
         { "Cached", true, xml_parse_bool, offsetof(sample_data_defaults, cached)},
@@ -907,7 +876,7 @@ emit_c_header(FILE *out, soundfont *sf)
         LL_FOREACH(instr_data *, instr, sf->instruments) {
             if (instr->unused)
                 continue;
-            fprintf(out, "extern Instrument %s;\n", instr->name);
+            fprintf(out, "extern Instrument SF%d_%s;\n", sf->info.index, instr->name);
         }
         fprintf(out, "\n");
     }
@@ -953,7 +922,7 @@ emit_c_header(FILE *out, soundfont *sf)
             if (instr_names[i] == NULL)
                 fprintf(out, "    NULL,\n");
             else
-                fprintf(out, "    &%s,\n", instr_names[i]);
+                fprintf(out, "    &SF%d_%s,\n", sf->info.index, instr_names[i]);
             pos += 4;
             size += 4;
         }
@@ -1316,10 +1285,10 @@ emit_c_instruments(FILE *out, soundfont *sf)
 
     LL_FOREACH(instr_data *, instr, sf->instruments) {
         if (instr->unused) {
-            fprintf(out, "NO_REORDER DATA Instrument _INSTR_UNUSED_%lu = {\n", unused_instr_num);
+            fprintf(out, "NO_REORDER DATA Instrument SF%d_INSTR_UNUSED_%lu = {\n", sf->info.index, unused_instr_num);
             unused_instr_num++;
         } else {
-            fprintf(out, "NO_REORDER DATA Instrument %s = {\n", instr->name);
+            fprintf(out, "NO_REORDER DATA Instrument SF%d_%s = {\n", sf->info.index, instr->name);
         }
 
         char nlo[5];
@@ -1371,37 +1340,37 @@ emit_c_drums(FILE *out, soundfont *sf)
 
     fprintf(out, "// DRUMS\n\n");
 
-    // Prepare pointer table data to be filled in while writing the drum structures. Init to 0 so if any low semitones
-    // are not covered by any drum group the name will be NULL.
+    // Prepare pointer table data to be filled in while writing the drum structures. Init to 0 so if any low notes are
+    // not covered by any drum group the name will be NULL.
     struct {
         const char *name;
         int n;
     } ptr_table[64];
     memset(ptr_table, 0, sizeof(ptr_table));
 
-    // While writing the drum structures we record the maximum semitone covered by this soundfont. Some "oddball"
-    // soundfonts like soundfont 0 do not have an array entry for all 64 semitones. We use this to know when to stop
-    // writing entries in the pointer table.
-    int max_semitone = -1;
+    // While writing the drum structures we record the maximum note covered by this soundfont. Some "oddball" soundfonts
+    // like soundfont 0 do not have an array entry for all 64 notes. We use this to know when to stop writing entries in
+    // the pointer table.
+    int max_note = -1;
 
     LL_FOREACH(drum_data *, drum, sf->drums) {
         if (drum->name == NULL) {
-            max_semitone++;
+            max_note++;
             continue;
         }
 
-        if (drum->semitone_end > max_semitone)
-            max_semitone = drum->semitone_end;
+        if (drum->note_end > max_note)
+            max_note = drum->note_end;
 
-        size_t length = drum->semitone_end - drum->semitone_start + 1;
+        size_t length = drum->note_end - drum->note_start + 1;
 
-        // Drum structures are duplicated for each semitone in the range they cover, the basenote for each is
-        // incremented by one but the data is otherwise identical. We write a preprocessor definition to make the
-        // resulting source more compact for easier inspection.
+        // Drum structures are duplicated for each note in the range they cover, the basenote for each is incremented
+        // by one but the data is otherwise identical. We write a preprocessor definition to make the resulting source
+        // more compact for easier inspection.
 
         fprintf(out,
                 // clang-format off
-               "#define %s_ENTRY(tuning) \\"                "\n"
+               "#define SF%d_%s_ENTRY(tuning) \\"           "\n"
                "    { \\"                                   "\n"
                "        %d, \\"                             "\n"
                "        %d, \\"                             "\n"
@@ -1409,20 +1378,20 @@ emit_c_drums(FILE *out, soundfont *sf)
                "        { &SF%d_%s_HEADER, (tuning) }, \\"  "\n"
                "        SF%d_%s, \\"                        "\n"
                "    }"                                      "\n"
-               "NO_REORDER DATA Drum %s[%lu] = {"           "\n",
+               "NO_REORDER DATA Drum SF%d_%s[%lu] = {"      "\n",
                 // clang-format on
-                drum->name,
+                sf->info.index, drum->name,
                 drum->envelope->release, // TODO expose override
-                drum->pan, sf->info.index, drum->sample->name, sf->info.index, drum->envelope->name, drum->name,
-                length);
+                drum->pan, sf->info.index, drum->sample->name, sf->info.index, drum->envelope->name, sf->info.index,
+                drum->name, length);
 
         // Write each structure while building the drum pointer table
 
-        if (drum->semitone_end + 1 > 64)
+        if (drum->note_end + 1 > 64)
             error("Bad drum range");
 
         for (size_t note_offset = 0; note_offset < length; note_offset++) {
-            size_t ptr_offset = drum->semitone_start + note_offset;
+            size_t ptr_offset = drum->note_start + note_offset;
 
             ptr_table[ptr_offset].name = drum->name;
             ptr_table[ptr_offset].n = note_offset;
@@ -1441,17 +1410,17 @@ emit_c_drums(FILE *out, soundfont *sf)
             //        tuning,
             //        f2i(tuning));
 
-            fprintf(out, "    %s_ENTRY(" F32_FMT "f),\n", drum->name, tuning);
+            fprintf(out, "    SF%d_%s_ENTRY(" F32_FMT "f),\n", sf->info.index, drum->name, tuning);
         }
 
         fprintf(out, "};\n\n");
         size += 0x10 * length;
     }
 
-    // Write the drum pointer table. Always start at 0 and end at the maximum used semitone. If any low semitones are
-    // not used, NULL is written into the array.
+    // Write the drum pointer table. Always start at 0 and end at the maximum used note. If any low notes are not used,
+    // NULL is written into the array.
 
-    size_t table_len = max_semitone + 1;
+    size_t table_len = max_note + 1;
     if (table_len > 64)
         error("Bad drum pointer table length");
 
@@ -1465,7 +1434,7 @@ emit_c_drums(FILE *out, soundfont *sf)
 
         if (i != 0 && ptr_table[i].n == 0) // Add some space between different drum groups
             fprintf(out, "\n");
-        fprintf(out, "    &%s[%d],\n", ptr_table[i].name, ptr_table[i].n);
+        fprintf(out, "    &SF%d_%s[%d],\n", sf->info.index, ptr_table[i].name, ptr_table[i].n);
     }
 
     sf->info.num_drums = table_len;
@@ -1551,7 +1520,7 @@ emit_h_instruments(FILE *out, soundfont *sf)
 
     LL_FOREACH(instr_data *, instr, sf->instruments) {
         if (!instr->unused) {
-            fprintf(out, "#define %s %d\n", instr->name, instr->program_number);
+            fprintf(out, "#define SF%d_%s %d\n", sf->info.index, instr->name, instr->program_number);
         }
     }
     fprintf(out, "\n");
@@ -1581,7 +1550,7 @@ emit_h_drums(FILE *out, soundfont *sf)
         return;
 
     // Emit drum defines in groups, named like [DrumName]_[NoteName]
-    // e.g. a drum called "MY_DRUM" with a sample basenote of C4 covering a semitone range of 0..3 looks like
+    // e.g. a drum called "MY_DRUM" with a sample basenote of C4 covering a note range of 0..3 looks like
     // #define MY_DRUM_C4  0
     // #define MY_DRUM_DF4 1
     // #define MY_DRUM_D4  2
@@ -1591,7 +1560,7 @@ emit_h_drums(FILE *out, soundfont *sf)
         if (drum->name == NULL)
             continue;
 
-        int length = drum->semitone_end - drum->semitone_start + 1;
+        int length = drum->note_end - drum->note_start + 1;
 
         for (int note_offset = 0; note_offset < length; note_offset++) {
             // wrap note on overflow
@@ -1599,7 +1568,8 @@ emit_h_drums(FILE *out, soundfont *sf)
             if (note > 127)
                 note -= 128;
 
-            fprintf(out, "#define %s_%s %d\n", drum->name, z64_note_name(note), drum->semitone_start + note_offset);
+            fprintf(out, "#define SF%d_%s_%s %d\n", sf->info.index, drum->name, z64_note_name(note),
+                    drum->note_start + note_offset);
         }
 
         fprintf(out, "\n");
@@ -1615,7 +1585,7 @@ emit_h_effects(FILE *out, soundfont *sf)
     int i = 0;
     LL_FOREACH(sfx_data *, sfx, sf->sfx) {
         if (sfx->sample != NULL)
-            fprintf(out, "#define %s %d\n", sfx->name, i);
+            fprintf(out, "#define SF%d_%s %d\n", sf->info.index, sfx->name, i);
         i++;
     }
     fprintf(out, "\n");

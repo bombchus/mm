@@ -429,8 +429,8 @@ endseg
 beginseg
     name "Audiotable"
     address 0
-    include "$(BUILD_DIR)/assets/audio/samplebanks/Samplebank_0.o"
-    include "$(BUILD_DIR)/assets/audio/samplebanks/Samplebank_2.o"
+    include "$(BUILD_DIR)/assets/audio/samplebanks/SampleBank_0.o"
+    include "$(BUILD_DIR)/assets/audio/samplebanks/SampleBank_2.o"
 endseg
 
 beginseg

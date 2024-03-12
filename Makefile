@@ -413,7 +413,7 @@ setup:
 	$(PYTHON) tools/buildtools/decompress_baserom.py $(VERSION)
 	$(PYTHON) tools/buildtools/extract_baserom.py $(BASEROM_DIR)/baserom-decompressed.z64 -o $(EXTRACTED_DIR)/baserom --dmadata-start `cat $(BASEROM_DIR)/dmadata_start.txt` --dmadata-names $(BASEROM_DIR)/dmadata_names.txt
 	$(PYTHON) tools/buildtools/extract_yars.py $(VERSION)
-	$(AUDIO_EXTRACT) -r baserom_uncompressed.z64 -v mm_u0 --full --write-xml
+	$(AUDIO_EXTRACT) -r baserom_uncompressed.z64 -v mm_u0 --read-xml
 
 assets:
 	$(PYTHON) extract_assets.py -j $(N_THREADS) -Z Wno-hardcoded-pointer
@@ -573,8 +573,8 @@ $(BUILD_DIR)/assets/audio/soundfonts/%.o: $(BUILD_DIR)/assets/audio/soundfonts/%
 	@$(LD) -r -T include/audio/sf.ld $(@:.o=.tmp) -o $(@:.o=.tmp2)
 # patch defined symbols to be ABS symbols so that they remain file-relative offsets forever
 	@$(ELFPATCH) $(@:.o=.tmp2) $(@:.o=.tmp2)
-# write start and size symbols afterwards, source name != symbolic name so source symbolic name from the .name file written by sfc
-	@$(OBJCOPY) --add-symbol $$(cat $(<:.c=.name))_Start=.rodata:0,global --redefine-sym __LEN__=$(@F:.o=_Size) $(@:.o=.tmp2) $@
+# write start and size symbols afterwards, filename != symbolic name so source symbolic name from the .name file written by sfc
+	@$(OBJCOPY) --add-symbol $$(cat $(<:.c=.name))_Start=.rodata:0,global --redefine-sym __LEN__=$$(cat $(<:.c=.name))_Size $(@:.o=.tmp2) $@
 # cleanup temp files
 	@$(RM) $(@:.o=.tmp) $(@:.o=.tmp2)
 # TESTING: link with samplebanks and dump binary

@@ -6,7 +6,9 @@
 
 import argparse, os, shutil, time
 from multiprocessing.pool import ThreadPool
-from typing import List, Union
+from typing import Dict, List, Union
+from xml.etree import ElementTree
+from xml.etree.ElementTree import Element
 
 from audio_tables import AudioCodeTable, AudioStorageMedium
 from audiobank_structs import AudioSampleCodec
@@ -26,7 +28,8 @@ from config import HANDWRITTEN_SEQUENCES_OOT, HANDWRITTEN_SEQUENCES_MM
 #   Run
 # ======================================================================================================================
 
-def collect_sample_banks(rom_image : memoryview, version_info : GameVersionInfo, table : AudioCodeTable):
+def collect_sample_banks(rom_image : memoryview, version_info : GameVersionInfo, table : AudioCodeTable,
+                         samplebank_xmls : Dict[int,Element]):
     sample_banks = []
 
     for i,entry in enumerate(table):
@@ -52,9 +55,9 @@ def collect_sample_banks(rom_image : memoryview, version_info : GameVersionInfo,
             else:
                 bug = False
 
-            bank = AudioTableFile(i, rom_image, entry, version_info.audiotable_rom + table.rom_addr, buffer_bug=bug)
-            os.makedirs(f"baserom/audiotable_files", exist_ok=True)
-            bank.dump_bin(f"baserom/audiotable_files/Samplebank_{i}.bin")
+            bank = AudioTableFile(i, rom_image, entry, version_info.audiotable_rom + table.rom_addr, buffer_bug=bug,
+                                  extraction_xml=samplebank_xmls.get(i, None))
+            bank.dump_bin(f"baserom/audiotable_files/{bank.file_name}.bin") # (debug)
 
             sample_banks.append(bank)
 
@@ -69,7 +72,7 @@ def bank_data_lookup(sample_banks : List[AudioTableFile], e : Union[AudioTableFi
         return e
 
 def collect_soundfonts(rom_image : memoryview, sound_font_table : AudioCodeTable, sample_banks : List[AudioTableFile],
-                       version_info : GameVersionInfo):
+                       version_info : GameVersionInfo, soundfont_xmls : Dict[int, Element]):
     soundfonts = []
 
     for i,entry in enumerate(sound_font_table):
@@ -83,50 +86,52 @@ def collect_soundfonts(rom_image : memoryview, sound_font_table : AudioCodeTable
 
         # Read the data
         soundfont = AudiobankFile(rom_image, i, entry, version_info.audiobank_rom + sound_font_table.rom_addr, bank1,
-                                  bank2, entry.sample_bank_id_1, entry.sample_bank_id_2)
+                                  bank2, entry.sample_bank_id_1, entry.sample_bank_id_2,
+                                  extraction_xml=soundfont_xmls.get(i, None))
         soundfonts.append(soundfont)
 
         # Write the individual file for debugging and comparison
-        os.makedirs(f"baserom/audiobank_files", exist_ok=True)
         soundfont.dump_bin(f"baserom/audiobank_files/{soundfont.file_name}.bin")
 
     return soundfonts
 
-def aifc_extract_one_sample(base_path : str, sample : AudioTableSample, n : int):
-    # print(f"SAMPLE {n}")
-    half = ".half" if sample.header.codec == AudioSampleCodec.CODEC_SMALL_ADPCM else ""
+def aifc_extract_one_sample(base_path : str, sample : AudioTableSample):
+    # debugm(f"SAMPLE {n}")
+    aifc_path = f"{base_path}/aifc/{sample.filename}"
+    wav_path = f"{base_path}/{sample.filename.replace('.aifc', '.wav')}"
     # export to AIFC
-    sample.to_file(f"{base_path}/aifc/Sample{n}{half}.aifc")
+    sample.to_file(aifc_path)
     # decode to AIFF/WAV
-    out = program_get(f"{SAMPLECONV_PATH} --matching pcm16 {base_path}/aifc/Sample{n}{half}.aifc {base_path}/Sample{n}{half}.wav")
+    program_get(f"{SAMPLECONV_PATH} --matching pcm16 {aifc_path} {wav_path}")
     # TODO remove the AIFC? (after testing)
 
 def aifc_extract_one_bin(base_path : str, sample : AudioTableData):
     # export to BIN
-    filename = f"UNACCOUNTED_{sample.start:X}_{sample.end:X}.bin"
-    sample.to_file(f"{base_path}/aifc/{filename}")
+    sample.to_file(f"{base_path}/aifc/{sample.filename}")
     # copy to correct location
-    shutil.copyfile(f"{base_path}/aifc/{filename}", f"{base_path}/{filename}")
+    shutil.copyfile(f"{base_path}/aifc/{sample.filename}", f"{base_path}/{sample.filename}")
     # TODO move instead of copy? (after testing)
 
 def extract_samplebank(pool : ThreadPool, sample_banks : List[AudioTableFile], bank : AudioTableFile, i : int,
                        write_xml : bool):
-    debugm(f"SAMPLE BANK {i}")
+    # debugm(f"SAMPLE BANK {i}")
 
     # deal with remaining gaps, have to blob them unless we can find an exact match in another bank
     bank.finalize_coverage(sample_banks)
+    # assign names
+    bank.assign_names()
 
     base_path = f"assets/audio/samples/Bank{i}"
 
     # write xml
-    os.makedirs(f"assets/audio/samplebanks", exist_ok=True)
-    with open(f"assets/audio/samplebanks/Samplebank_{i}.xml", "w") as outfile:
+    with open(f"assets/audio/samplebanks/{bank.file_name}.xml", "w") as outfile:
         outfile.write(bank.to_xml(base_path))
 
     # write the extraction xml if specified
     if write_xml:
-        os.makedirs(f"assets/xml/audio/samplebanks", exist_ok=True)
-        bank.write_extraction_xml(f"assets/xml/audio/samplebanks/Samplebank_{i}.xml")
+        bank.write_extraction_xml(f"assets/xml/audio/samplebanks/{bank.file_name}.xml")
+
+    # write sample sand blobs
 
     os.makedirs(f"{base_path}/aifc", exist_ok=True)
 
@@ -136,18 +141,21 @@ def extract_samplebank(pool : ThreadPool, sample_banks : List[AudioTableFile], b
     t_start = time.time()
 
     # we assume the number of bin samples are very small and don't multiprocess it
-    for j,sample in enumerate(bin_samples):
+    for sample in bin_samples:
         aifc_extract_one_bin(base_path, sample)
 
     # multiprocess aifc extraction + decompression
-    async_results = [pool.apply_async(aifc_extract_one_sample, args=(base_path, sample, j)) for j,sample in enumerate(aifc_samples)]
+    async_results = [pool.apply_async(aifc_extract_one_sample, args=(base_path, sample)) for sample in aifc_samples]
     # block until done
     [res.get() for res in async_results]
 
-    debugm(f"Took {time.time() - t_start}s")
+    print(f"Samplebank {i} extraction took {time.time() - t_start}s")
+
+    # TODO drop aifc dir
 
 def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : memoryview, soundfonts : List[AudiobankFile],
-                      rom_image : memoryview, version_info : GameVersionInfo, write_xml : bool):
+                      rom_image : memoryview, version_info : GameVersionInfo, write_xml : bool,
+                      sequence_xmls : Dict[int, Element]):
 
     sequence_font_table_cvg = [0] * len(sequence_font_table)
 
@@ -171,6 +179,8 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
 
     assert len(seq_enum_names) == len(sequence_table)
 
+    os.makedirs(f"baserom/audioseq_files", exist_ok=True) # (debug)
+    os.makedirs(f"assets/audio/sequences", exist_ok=True)
     if write_xml:
         os.makedirs(f"assets/xml/audio/sequences", exist_ok=True)
 
@@ -199,12 +209,16 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
             ext = ".prg" if i in handwritten_sequences else ""
 
             # (Debug) extract original sequence binary for comparison
-            os.makedirs(f"baserom/audioseq_files", exist_ok=True)
             with open(f"baserom/audioseq_files/seq_{i}{ext}.aseq", "wb") as outfile:
                 outfile.write(seq_data)
 
-            # TODO from xml
-            sequence_name = f"Sequence_{i}"
+            extraction_xml = sequence_xmls.get(i, None)
+            if extraction_xml is None:
+                sequence_filename = f"seq_{i}"
+                sequence_name = f"Sequence_{i}"
+            else:
+                sequence_filename = extraction_xml[0]
+                sequence_name = extraction_xml[1].attrib["Name"]
 
             # Write extraction xml entry
             if write_xml:
@@ -215,31 +229,27 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
                     "Index" : i,
                 })
 
-                with open(f"assets/xml/audio/sequences/Sequence_{i}.xml", "w") as outfile:
+                with open(f"assets/xml/audio/sequences/{sequence_filename}.xml", "w") as outfile:
                     outfile.write(str(xml))
 
             if i in handwritten_sequences:
                 # skip writing out "handwritten" sequences
                 continue
 
-            print(f"Extract {sequence_name}")
+            # debugm("=======================================================")
+            # debugm(f"SEQUENCE {i} [size=0x{entry.size:X}] [fonts={[f'0x{b:02X}' for b in fonts]}]")
+            # debugm("=======================================================")
+            # debugm(entry)
 
-            #debugm("=======================================================")
-            #debugm(f"SEQUENCE {i} [size=0x{entry.size:X}] [fonts={[f'0x{b:02X}' for b in fonts]}]")
-            #debugm("=======================================================")
-            #debugm(entry)
-
-            # TODO also pass the relevant soundfont(s) files for proper instrument enum names
             disas = SequenceDisassembler(i, seq_data, SEQ_DISAS_HACKS[version_info.version_id].get(i, None), CMD_SPEC,
-                                         version_info.mml_version, f"assets/audio/sequences/seq_{i}.seq",
+                                         version_info.mml_version, f"assets/audio/sequences/{sequence_filename}.seq",
                                          sequence_name, [soundfonts[i] for i in fonts], seq_enum_names)
             disas.analyze()
             disas.emit()
         else:
-            # Pointer to another sequence
-            #debugm("POINTER")
-            #debugm(entry)
-            # TODO handle this (oot seq 87, mm several)
+            # Pointer to another sequence, checked later
+            # debugm("POINTER")
+            # debugm(entry)
             pass
 
     # Check full coverage
@@ -269,14 +279,16 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
 
             fonts2 = all_fonts[j]
 
-            debugm(f"{i} -> {j}")
-            debugm(list(bytes(fonts)))
-            debugm(list(bytes(fonts2)))
+            # debugm(f"{i} -> {j}")
+            # debugm(list(bytes(fonts)))
+            # debugm(list(bytes(fonts2)))
 
             assert fonts == fonts2, \
                    f"Font mismatch: Pointer {i} against Real {j}. This is a limitation of the build process."
 
-def extract_with_full_analysis(version_name : str, rom_path : str, write_xml : bool):
+def do(version_name : str, rom_path : str, read_xml : bool, write_xml : bool):
+    print("Setting up...")
+
     # Get version info
 
     if version_name not in VERSION_TABLE:
@@ -318,18 +330,46 @@ def extract_with_full_analysis(version_name : str, rom_path : str, write_xml : b
         outfile.write(sequence_font_table)
 
     # ==================================================================================================================
+    # Collect extraction xmls
+    # ==================================================================================================================
+
+    samplebank_xmls = {}
+    soundfont_xmls = {}
+    sequence_xmls = {}
+
+    if read_xml:
+        # Read all present xmls
+
+        def walk_xmls(out_dict, path, typename):
+            for root,_,files in os.walk(path):
+                for f in files:
+                    fullpath = os.path.join(root, f)
+                    xml = ElementTree.parse(fullpath)
+                    xml_root = xml.getroot()
+
+                    if xml_root.tag != typename or "Name" not in xml_root.attrib or "Index" not in xml_root.attrib:
+                        error(f"Malformed {typename} extraction xml: \"{fullpath}\"")
+                    out_dict[int(xml_root.attrib["Index"])] = (f.replace(".xml", ""), xml_root)
+
+        walk_xmls(samplebank_xmls, f"assets/xml/audio/samplebanks", "SampleBank")
+        walk_xmls(soundfont_xmls, f"assets/xml/audio/soundfonts", "SoundFont")
+        walk_xmls(sequence_xmls, f"assets/xml/audio/sequences", "Sequence")
+
+        # TODO warn about any missing xmls or xmls with a bad index
+
+    # ==================================================================================================================
     # Collect samplebanks
     # ==================================================================================================================
 
-    sample_banks = collect_sample_banks(rom_image, version_info, sample_bank_table)
+    os.makedirs(f"baserom/audiotable_files", exist_ok=True) # (debug)
+    sample_banks = collect_sample_banks(rom_image, version_info, sample_bank_table, samplebank_xmls)
 
     # ==================================================================================================================
     # Collect soundfonts
     # ==================================================================================================================
-    #   Soundfonts
-    #
 
-    soundfonts = collect_soundfonts(rom_image, sound_font_table, sample_banks, version_info)
+    os.makedirs(f"baserom/audiobank_files", exist_ok=True) # (debug)
+    soundfonts = collect_soundfonts(rom_image, sound_font_table, sample_banks, version_info, soundfont_xmls)
 
     # ==================================================================================================================
     # Finalize samplebanks
@@ -339,14 +379,17 @@ def extract_with_full_analysis(version_name : str, rom_path : str, write_xml : b
         if isinstance(bank, AudioTableFile):
             bank.finalize_samples()
 
-    # TODO By this point we must have fully decided upon a samplerate + basenote to put in the sample
-
     # ==================================================================================================================
     # Extract samplebank contents
     # ==================================================================================================================
 
+    print("Extracting samplebanks...")
+
     # Check that the sampleconv binary is available
     assert os.path.isfile(SAMPLECONV_PATH) , "Compile sampleconv!!"
+
+    os.makedirs(f"assets/audio/samplebanks", exist_ok=True)
+    os.makedirs(f"assets/xml/audio/samplebanks", exist_ok=True)
 
     with ThreadPool(processes=os.cpu_count()) as pool:
         for i,bank in enumerate(sample_banks):
@@ -357,6 +400,12 @@ def extract_with_full_analysis(version_name : str, rom_path : str, write_xml : b
     # Extract soundfonts
     # ==================================================================================================================
 
+    print("Extracting soundfonts...")
+
+    os.makedirs(f"assets/audio/soundfonts", exist_ok=True)
+    if write_xml:
+        os.makedirs(f"assets/xml/audio/soundfonts", exist_ok=True)
+
     for i,sf in enumerate(soundfonts):
         sf : AudiobankFile
 
@@ -366,37 +415,29 @@ def extract_with_full_analysis(version_name : str, rom_path : str, write_xml : b
         sf.finalize()
 
         # write the soundfont xml itself
-        os.makedirs(f"assets/audio/soundfonts", exist_ok=True)
         with open(f"assets/audio/soundfonts/{sf.file_name}.xml", "w") as outfile:
-            outfile.write(sf.to_xml(f"Soundfont_{i}", f"assets/audio/samplebanks"))
+            outfile.write(sf.to_xml(f"Soundfont_{i}", "assets/audio/samplebanks"))
 
         # write the extraction xml if specified
         if write_xml:
-            os.makedirs(f"assets/xml/audio/soundfonts", exist_ok=True)
             sf.write_extraction_xml(f"assets/xml/audio/soundfonts/{sf.file_name}.xml")
 
     # ==================================================================================================================
     # Extract sequences
     # ==================================================================================================================
 
-    extract_sequences(sequence_table, sequence_font_table, soundfonts, rom_image, version_info, write_xml)
+    print("Extracting sequences...")
 
-def extract_with_xmls(version_name : str, rom_path : str, xmls_path : str):
-    # TODO implement this
-    assert False, "Not Yet Implemented!"
+    extract_sequences(sequence_table, sequence_font_table, soundfonts, rom_image, version_info, write_xml, sequence_xmls)
+
+    print("Done")
 
 if __name__ == '__main__':
-    # TODO 2 modes:
-    # default : extract only what is needed to build using pre-generated xmls
-    # --full  : extract everything including things that are ordinarily committed
-    parser = argparse.ArgumentParser(description="baserom asset extractor")
+    parser = argparse.ArgumentParser(description="baserom audio asset extractor")
     parser.add_argument("-r", "--rom", required=True, help="path to baserom image")
     parser.add_argument("-v", "--version", required=True, help="baserom version")
-    parser.add_argument("--full", required=False, action="store_true", help="Run full analysis")
-    parser.add_argument("--write-xml", required=False, action="store_true", help="Write xml files")
+    parser.add_argument("--read-xml", required=False, action="store_true", help="Read extraction xml files")
+    parser.add_argument("--write-xml", required=False, action="store_true", help="Write extraction xml files")
     args = parser.parse_args()
 
-    if args.full:
-        extract_with_full_analysis(args.version, args.rom, args.write_xml)
-    else:
-        extract_with_xmls(args.version, args.rom, "assets/xml")
+    do(args.version, args.rom, args.read_xml, args.write_xml)

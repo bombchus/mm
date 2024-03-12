@@ -14,25 +14,25 @@
         <Envelope Name="Env10"/>
     </Envelopes>
     <Instruments>
-        <Instrument ProgramNumber="0" Name="SF19_INST_0"/>
-        <Instrument ProgramNumber="1" Name="SF19_INST_1"/>
-        <Instrument ProgramNumber="2" Name="SF19_INST_2"/>
-        <Instrument ProgramNumber="3" Name="SF19_INST_3"/>
-        <Instrument ProgramNumber="4" Name="SF19_INST_4"/>
-        <Instrument ProgramNumber="5" Name="SF19_INST_5"/>
-        <Instrument ProgramNumber="6" Name="SF19_INST_6"/>
-        <Instrument ProgramNumber="7" Name="SF19_INST_7"/>
-        <Instrument ProgramNumber="10" Name="SF19_INST_10"/>
-        <Instrument ProgramNumber="11" Name="SF19_INST_11"/>
-        <Instrument ProgramNumber="12" Name="SF19_INST_12"/>
-        <Instrument ProgramNumber="13" Name="SF19_INST_13"/>
-        <Instrument ProgramNumber="14" Name="SF19_INST_14"/>
+        <Instrument ProgramNumber="0" Name="INST_0"/>
+        <Instrument ProgramNumber="1" Name="INST_1"/>
+        <Instrument ProgramNumber="2" Name="INST_2"/>
+        <Instrument ProgramNumber="3" Name="INST_3"/>
+        <Instrument ProgramNumber="4" Name="INST_4"/>
+        <Instrument ProgramNumber="5" Name="INST_5"/>
+        <Instrument ProgramNumber="6" Name="INST_6"/>
+        <Instrument ProgramNumber="7" Name="INST_7"/>
+        <Instrument ProgramNumber="10" Name="INST_10"/>
+        <Instrument ProgramNumber="11" Name="INST_11"/>
+        <Instrument ProgramNumber="12" Name="INST_12"/>
+        <Instrument ProgramNumber="13" Name="INST_13"/>
+        <Instrument ProgramNumber="14" Name="INST_14"/>
     </Instruments>
     <Drums>
-        <Drum Name="SF19_DRUM_0"/>
-        <Drum Name="SF19_DRUM_1"/>
-        <Drum Name="SF19_DRUM_2"/>
-        <Drum Name="SF19_DRUM_3"/>
-        <Drum Name="SF19_DRUM_4"/>
+        <Drum Name="DRUM_0"/>
+        <Drum Name="DRUM_1"/>
+        <Drum Name="DRUM_2"/>
+        <Drum Name="DRUM_3"/>
+        <Drum Name="DRUM_4"/>
     </Drums>
 </SoundFont>

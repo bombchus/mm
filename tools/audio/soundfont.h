@@ -86,9 +86,9 @@ typedef struct drum_data {
     const char *sample_name;
     const char *envelope_name;
     envelope_data *envelope;
-    int8_t semitone;
-    int8_t semitone_start;
-    int8_t semitone_end;
+    int8_t note;
+    int8_t note_start;
+    int8_t note_end;
     int pan;
 
     sample_data *sample;

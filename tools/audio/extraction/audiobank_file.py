@@ -4,6 +4,8 @@
 #
 
 import struct
+from typing import Tuple
+from xml.etree.ElementTree import Element
 
 from audio_tables import AudioCodeTable
 from audiobank_structs import AdpcmBook, AdpcmLoop, Drum, Instrument, SoundFontSample, SoundFontSound
@@ -153,12 +155,11 @@ class DrumGroup:
 
         attributes["Pan"] = self.pan
 
-        # TODO pitch_names ?
         if self.start == self.end:
-            attributes["Semitone"] = self.start
+            attributes["Note"] = pitch_names[self.start]
         else:
-            attributes["SemitoneStart"] = self.start
-            attributes["SemitoneEnd"] = self.end
+            attributes["NoteStart"] = pitch_names[self.start]
+            attributes["NoteEnd"] = pitch_names[self.end]
 
         attributes["Sample"] = sample_name_func(self.sample_header_offset)
 
@@ -180,7 +181,8 @@ class AudiobankFile:
     """
 
     def __init__(self, rom_image : memoryview, index : int, table_entry : AudioCodeTable.AudioCodeTableEntry,
-                 rom_offset : int, bank1 : AudioTableFile, bank2 : AudioTableFile, bank1_num : int, bank2_num : int):
+                 rom_offset : int, bank1 : AudioTableFile, bank2 : AudioTableFile, bank1_num : int, bank2_num : int,
+                 extraction_xml : Tuple[str, Element] = None):
         self.bank_num = index
         self.table_entry : AudioCodeTable.AudioCodeTableEntry = table_entry
         self.num_instruments = self.table_entry.num_instruments
@@ -190,9 +192,40 @@ class AudiobankFile:
         self.bank1_num = bank1_num
         self.bank2_num = bank2_num
 
-        # TODO from xml
-        self.name = f"Soundfont_{self.bank_num}"
-        self.file_name = f"Soundfont_{self.bank_num}"
+        if extraction_xml is None:
+            self.file_name = f"Soundfont_{self.bank_num}"
+            self.name = f"Soundfont_{self.bank_num}"
+
+            self.extraction_envelopes_info = None
+            self.extraction_instruments_info = None
+            self.extraction_drums_info = None
+            self.extraction_effects_info = None
+        else:
+            self.file_name = extraction_xml[0]
+            self.name = extraction_xml[1].attrib["Name"]
+
+            self.extraction_envelopes_info = []
+            self.extraction_instruments_info = {}
+            self.extraction_drums_info = []
+            self.extraction_effects_info = []
+
+            for item in extraction_xml[1]:
+                if item.tag == "Envelopes":
+                    for env in item:
+                        assert env.tag == "Envelope"
+                        self.extraction_envelopes_info.append(env.attrib["Name"])
+                elif item.tag == "Instruments":
+                    for instr in item:
+                        assert instr.tag == "Instrument"
+                        self.extraction_instruments_info[int(instr.attrib["ProgramNumber"])] = instr.attrib["Name"]
+                elif item.tag == "Drums":
+                    for drum in item:
+                        self.extraction_drums_info.append(drum.attrib["Name"])
+                elif item.tag == "Effects":
+                    for effect in item:
+                        self.extraction_effects_info.append(effect.attrib["Name"])
+                else:
+                    assert False, item.tag
 
         # Coverage consists of a list of itervals of the form [[start,type],[end,type]]
         self.coverage = []
@@ -282,18 +315,18 @@ class AudiobankFile:
 
             first = False
 
-        semitone_start = 0
+        note_start = 0
         for drum_grp in self.drum_groups:
-            semitone_end = semitone_start + len(drum_grp) - 1
+            note_end = note_start + len(drum_grp) - 1
 
             if all(d is None for d in drum_grp):
                 pass
-                #print(f"GROUP EMPTY == [{semitone_start:2}:{semitone_end:2}]")
+                #print(f"GROUP EMPTY == [{note_start:2}:{note_end:2}]")
             else:
                 drum_grp : DrumGroup
-                drum_grp.set_range(semitone_start, semitone_end)
+                drum_grp.set_range(note_start, note_end)
 
-            semitone_start = semitone_end + 1
+            note_start = note_end + 1
 
     def collect_sfx(self):
         # Read structures
@@ -651,6 +684,7 @@ class AudiobankFile:
         return ptr_list
 
     def sorted_envelopes(self):
+        # sort by offset
         for i,(offset,env) in enumerate(sorted(self.envelopes.items(), key=lambda x : x[0])):
             yield i,(offset,env)
 
@@ -670,17 +704,17 @@ class AudiobankFile:
 
     def lookup_sample_name(self, sample_header : SoundFontSample):
         bank = self.bank1 if sample_header.medium == 0 else self.bank2
-        _,name = bank.lookup_sample_with_name(sample_header.sample_addr)
+        name = bank.lookup_sample(sample_header.sample_addr).name
+        assert name is not None
         return name
 
     def sample_name_func(self, offset):
         return self.lookup_sample_name(self.sample_headers[offset])
 
     def finalize(self):
-        print(f"Finalize soundfont {self.bank_num}")
+        # print(f"Finalize soundfont {self.bank_num}")
 
         # Assign envelope names
-        # TODO pull from input xml
         for i,(offset,env) in self.sorted_envelopes():
             env : Envelope
             env.name = self.envelope_name(i)
@@ -721,20 +755,28 @@ class AudiobankFile:
         # TODO resolve decay/release index overrides?
 
     def envelope_name(self, index):
-        # TODO xml
-        return f"Env{index}"
+        if self.extraction_envelopes_info is not None:
+            return self.extraction_envelopes_info[index]
+        else:
+            return f"Env{index}"
 
-    def instrument_name(self, index):
-        # TODO xml
-        return f"SF{self.bank_num}_INST_{index}"
+    def instrument_name(self, program_number):
+        if self.extraction_instruments_info is not None:
+            return self.extraction_instruments_info[program_number]
+        else:
+            return f"INST_{program_number}"
 
     def drum_grp_name(self, index):
-        # TODO xml
-        return f"SF{self.bank_num}_DRUM_{index}"
+        if self.extraction_drums_info is not None:
+            return self.extraction_drums_info[index]
+        else:
+            return f"DRUM_{index}"
 
     def effect_name(self, index):
-        # TODO xml
-        return f"SF{self.bank_num}_EFFECT_{index}"
+        if self.extraction_effects_info is not None:
+            return self.extraction_effects_info[index]
+        else:
+            return f"EFFECT_{index}"
 
     def envelopes_to_xml(self, xml : XMLWriter):
         if len(self.envelopes) == 0:
@@ -797,7 +839,7 @@ class AudiobankFile:
         # Write in struct order
         for instr in sorted(self.instruments, key=lambda instr : instr.struct_index):
             instr : Instrument
-            name = self.instrument_name(instr.program_number)
+            name = self.instrument_name(instr.program_number) if not instr.unused else None
             instr.to_xml(xml, name, self.sample_name_func, self.envelope_name_func)
 
         xml.write_end_tag()
@@ -810,7 +852,7 @@ class AudiobankFile:
             "Index"       : self.bank_num,
             "Medium"      : self.table_entry.medium.name,
             "CachePolicy" : self.table_entry.cache_policy.name,
-            "SampleBank"  : f"{samplebanks_base}/{self.bank1.name}.xml",
+            "SampleBank"  : f"{samplebanks_base}/{self.bank1.file_name}.xml",
         }
 
         # If the samplebank1 index is not the true index (that is it's a pointer), write an Indirect
@@ -818,7 +860,7 @@ class AudiobankFile:
             start["Indirect"] = self.bank1_num
 
         if self.bank2_num != 255: # bank2 is not None if bank2_num != 255
-            start["SampleBankDD"] = f"{samplebanks_base}/{self.bank2.name}.xml",
+            start["SampleBankDD"] = f"{samplebanks_base}/{self.bank2.file_name}.xml",
             # TODO we should really write an indirect for DD banks too if bank2_num != bank2.bank_num
 
         if self.loops_have_frames:
@@ -878,21 +920,20 @@ class AudiobankFile:
 
             # Write in struct order
             for instr in sorted(self.instruments, key=lambda instr : instr.struct_index):
-                xml.write_element("Instrument", {
-                    "ProgramNumber" : instr.program_number,
-                    "Name" : self.instrument_name(instr.program_number),
-                })
+                instr : Instrument
+                if not instr.unused:
+                    xml.write_element("Instrument", {
+                        "ProgramNumber" : instr.program_number,
+                        "Name" : self.instrument_name(instr.program_number),
+                    })
 
             xml.write_end_tag()
 
-        if len(self.drum_groups) != 0:
+        if any(isinstance(dg, DrumGroup) for dg in self.drum_groups):
             xml.write_start_tag("Drums")
 
             for i,drum_grp in enumerate(self.drum_groups):
-                if isinstance(drum_grp, list):
-                    xml.write_element("Drum")
-                else:
-                    drum_grp : DrumGroup
+                if isinstance(drum_grp, DrumGroup):
                     xml.write_element("Drum", {
                         "Name" : self.drum_grp_name(i)
                     })

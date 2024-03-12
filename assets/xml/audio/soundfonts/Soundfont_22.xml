@@ -7,13 +7,13 @@
         <Envelope Name="Env3"/>
     </Envelopes>
     <Instruments>
-        <Instrument ProgramNumber="0" Name="SF22_INST_0"/>
-        <Instrument ProgramNumber="1" Name="SF22_INST_1"/>
-        <Instrument ProgramNumber="2" Name="SF22_INST_2"/>
-        <Instrument ProgramNumber="3" Name="SF22_INST_3"/>
-        <Instrument ProgramNumber="4" Name="SF22_INST_4"/>
-        <Instrument ProgramNumber="5" Name="SF22_INST_5"/>
-        <Instrument ProgramNumber="6" Name="SF22_INST_6"/>
-        <Instrument ProgramNumber="7" Name="SF22_INST_7"/>
+        <Instrument ProgramNumber="0" Name="INST_0"/>
+        <Instrument ProgramNumber="1" Name="INST_1"/>
+        <Instrument ProgramNumber="2" Name="INST_2"/>
+        <Instrument ProgramNumber="3" Name="INST_3"/>
+        <Instrument ProgramNumber="4" Name="INST_4"/>
+        <Instrument ProgramNumber="5" Name="INST_5"/>
+        <Instrument ProgramNumber="6" Name="INST_6"/>
+        <Instrument ProgramNumber="7" Name="INST_7"/>
     </Instruments>
 </SoundFont>

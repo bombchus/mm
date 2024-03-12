@@ -127,7 +127,7 @@ main(int argc, char **argv)
 
     const container_spec *out_container = container_from_name(out_path);
     if (out_container == NULL)
-        error("Unsupported input format");
+        error("Unsupported output format");
 
     const codec_spec *out_codec = codec_from_name(out_codec_name);
     if (out_codec == NULL)

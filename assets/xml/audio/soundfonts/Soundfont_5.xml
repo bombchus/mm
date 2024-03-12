@@ -11,18 +11,18 @@
         <Envelope Name="Env7"/>
     </Envelopes>
     <Instruments>
-        <Instrument ProgramNumber="0" Name="SF5_INST_0"/>
-        <Instrument ProgramNumber="1" Name="SF5_INST_1"/>
-        <Instrument ProgramNumber="2" Name="SF5_INST_2"/>
-        <Instrument ProgramNumber="3" Name="SF5_INST_3"/>
-        <Instrument ProgramNumber="4" Name="SF5_INST_4"/>
-        <Instrument ProgramNumber="5" Name="SF5_INST_5"/>
-        <Instrument ProgramNumber="6" Name="SF5_INST_6"/>
-        <Instrument ProgramNumber="7" Name="SF5_INST_7"/>
+        <Instrument ProgramNumber="0" Name="INST_0"/>
+        <Instrument ProgramNumber="1" Name="INST_1"/>
+        <Instrument ProgramNumber="2" Name="INST_2"/>
+        <Instrument ProgramNumber="3" Name="INST_3"/>
+        <Instrument ProgramNumber="4" Name="INST_4"/>
+        <Instrument ProgramNumber="5" Name="INST_5"/>
+        <Instrument ProgramNumber="6" Name="INST_6"/>
+        <Instrument ProgramNumber="7" Name="INST_7"/>
     </Instruments>
     <Drums>
-        <Drum Name="SF5_DRUM_0"/>
-        <Drum Name="SF5_DRUM_1"/>
-        <Drum Name="SF5_DRUM_2"/>
+        <Drum Name="DRUM_0"/>
+        <Drum Name="DRUM_1"/>
+        <Drum Name="DRUM_2"/>
     </Drums>
 </SoundFont>

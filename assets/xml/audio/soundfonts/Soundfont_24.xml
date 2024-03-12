@@ -5,13 +5,13 @@
         <Envelope Name="Env1"/>
     </Envelopes>
     <Instruments>
-        <Instrument ProgramNumber="10" Name="SF24_INST_10"/>
+        <Instrument ProgramNumber="10" Name="INST_10"/>
     </Instruments>
     <Drums>
-        <Drum Name="SF24_DRUM_0"/>
-        <Drum Name="SF24_DRUM_1"/>
-        <Drum Name="SF24_DRUM_2"/>
-        <Drum Name="SF24_DRUM_3"/>
-        <Drum Name="SF24_DRUM_4"/>
+        <Drum Name="DRUM_0"/>
+        <Drum Name="DRUM_1"/>
+        <Drum Name="DRUM_2"/>
+        <Drum Name="DRUM_3"/>
+        <Drum Name="DRUM_4"/>
     </Drums>
 </SoundFont>

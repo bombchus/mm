@@ -4,11 +4,13 @@
 #
 
 import struct
+from typing import Dict, Tuple
+from xml.etree.ElementTree import Element
 
 from audio_tables import AudioCodeTable
 from audiobank_structs import AudioSampleCodec, SoundFontSample, AdpcmBook, AdpcmLoop
 from tuning import pitch_names, note_z64_to_midi, recalc_tuning, rate_from_tuning, rank_rates_notes, BAD_FLOATS
-from util import align, XMLWriter, f32_to_u32
+from util import align, error, XMLWriter, f32_to_u32
 
 class AIFCFile:
 
@@ -92,7 +94,9 @@ class AudioTableData:
         self.end : int = end
         self.data = data
         assert len(self.data) % 2 == 0
-        self.is_aifc = False
+
+        self.name : str = None
+        self.filename : str = None
 
     def __len__(self):
         return len(self.data)
@@ -124,7 +128,6 @@ class AudioTableSample(AudioTableData):
 
     def __init__(self, start : int, end : int, header : SoundFontSample, data, book : AdpcmBook, loop : AdpcmLoop, padding=None):
         super().__init__(start, end, data)
-        self.is_aifc = True
 
         self.header : SoundFontSample = header
         self.book : AdpcmBook = book
@@ -179,7 +182,7 @@ class AudioTableSample(AudioTableData):
     def base_note_number(self):
         return note_z64_to_midi(pitch_names.index(self.base_note))
 
-    def resolve_basenote_rate(self, i):
+    def resolve_basenote_rate(self, extraction_sample_info : Dict[int, Dict[str,str]]):
         # print("")
         # print(f"BANK {self.bank_num} SAMPLE {i:3} [0x{sample.start:05X}:0x{sample.end:05X}]")
 
@@ -259,6 +262,15 @@ class AudioTableSample(AudioTableData):
                 # select best note to go in the sample
                 final_rate,(final_note,) = rank_rates_notes(finalists)
 
+        if extraction_sample_info is not None:
+            if self.start in extraction_sample_info:
+                entry = extraction_sample_info[self.start]
+                if "SampleRate" in entry and "BaseNote" in entry:
+                    final_rate = int(entry["SampleRate"])
+                    final_note = entry["BaseNote"]
+            else:
+                print(f"WARNING: Missing extraction xml entry for sample at offset=0x{self.start:X}")
+
         #print("     ",len(FINAL_NOTES_RATES), FINAL_NOTES_RATES)
 
         # if rate_3ds is not None and len(FINAL_NOTES_RATES) == 1:
@@ -308,7 +320,7 @@ class AudioTableSample(AudioTableData):
         )
 
         aifc.add_custom_section(b"VADPCMCODES", self.book.serialize())
-        if self.loop is not None and self.loop.count != 0:
+        if self.loop.count != 0:
             # We don't need to write a VADPCMLOOPS chunk if the count is 0 as we can represent these by the absence of
             # a VADPCMLOOPS chunk; a count of 0 indicates the sample has no loop, the start and end of a loop with
             # count=0 are always 0 and the end of the sample respectively.
@@ -351,20 +363,38 @@ class AudioTableFile:
     Single sample bank in the Audiotable
     """
 
-    def __init__(self, bank_num : int, rom_image : memoryview, table_entry : AudioCodeTable.AudioCodeTableEntry, rom_offset : int, buffer_bug=False):
+    def __init__(self, bank_num : int, rom_image : memoryview, table_entry : AudioCodeTable.AudioCodeTableEntry,
+                 rom_offset : int, buffer_bug : bool = False, extraction_xml : Tuple[str, Element] = None):
         self.bank_num = bank_num
         self.table_entry : AudioCodeTable.AudioCodeTableEntry = table_entry
         self.data = self.table_entry.data(rom_image, rom_offset)
         self.buffer_bug = buffer_bug
 
-        # TODO from xml
-        self.name = f"Samplebank_{self.bank_num}"
+        self.samples_final = None
+
+        if extraction_xml is None:
+            self.file_name = f"SampleBank_{self.bank_num}"
+            self.name = f"SampleBank_{self.bank_num}"
+            self.extraction_sample_info = None
+            self.extraction_blob_info = None
+        else:
+            self.file_name = extraction_xml[0]
+            self.name = extraction_xml[1].attrib["Name"]
+
+            self.extraction_sample_info = {}
+            self.extraction_blob_info = {}
+            for item in extraction_xml[1]:
+                if item.tag == "Sample":
+                    self.extraction_sample_info[int(item.attrib["Offset"], 16)] = item.attrib
+                elif item.tag == "Blob":
+                    self.extraction_blob_info[int(item.attrib["Offset"], 16)] = item.attrib
+                else:
+                    assert False
+
+        self.pointer_indices = []
 
         self.samples = {}
         self.coverage = set()
-        self.samples_final = None
-
-        self.pointer_indices = []
 
     def register_ptr(self, index):
         self.pointer_indices.append(index)
@@ -406,7 +436,7 @@ class AudioTableFile:
             new_sample.notes_rates.add((notes_rates, tuning))
             self.samples[sample_start] = new_sample
 
-    def lookup_sample(self, offset):
+    def lookup_sample(self, offset) -> AudioTableSample:
         return self.samples[offset]
 
     def lookup_sample_with_idx(self, offset):
@@ -417,13 +447,28 @@ class AudioTableFile:
         i = sorted(self.samples.keys()).index(offset)
         return i,sample
 
-    def sample_name(self, index):
-        # TODO lookup in xml
+    def sample_name(self, sample : AudioTableSample, index : int):
+        if self.extraction_sample_info is not None:
+            if sample.start in self.extraction_sample_info:
+                return self.extraction_sample_info[sample.start]["Name"]
+            print(f"WARNING: Missing extraction xml entry for sample at offset=0x{sample.start:X}")
         return f"SAMPLE_{self.bank_num}_{index}"
 
-    def sample_filename(self, index):
-        # TODO lookup in xml
-        return f"Sample{index}"
+    def sample_filename(self, sample : AudioTableSample, index : int):
+        ext = ".half.aifc" if sample.header.codec == AudioSampleCodec.CODEC_SMALL_ADPCM else ".aifc"
+
+        if self.extraction_sample_info is not None:
+            if sample.start in self.extraction_sample_info:
+                return self.extraction_sample_info[sample.start]["FileName"] + ext
+            print(f"WARNING: Missing extraction xml entry for sample at offset=0x{sample.start:X}")
+        return f"Sample{index}{ext}"
+
+    def blob_filename(self, start, end):
+        if self.extraction_blob_info is not None:
+            if start in self.extraction_blob_info:
+                return self.extraction_blob_info[start]["Name"]
+            print(f"WARNING: Missing extraction xml entry for blob at offset=0x{start:X}")
+        return f"UNACCOUNTED_{start:X}_{end:X}"
 
     def lookup_sample_with_name(self, offset):
         i,sample = self.lookup_sample_with_idx(offset)
@@ -433,11 +478,9 @@ class AudioTableFile:
     def finalize_samples(self):
         self.samples_final = list(sorted(self.samples.values(), key = lambda sample : sample.start))
 
-        print(f"Finalize Sample Bank {self.bank_num}")
-
         for i,sample in enumerate(self.samples_final):
             sample : AudioTableSample
-            sample.resolve_basenote_rate(i)
+            sample.resolve_basenote_rate(self.extraction_sample_info)
 
     def finalize_coverage(self, all_sample_banks):
         if len(self.coverage) != 0:
@@ -518,11 +561,27 @@ class AudioTableFile:
         # Final sort
         self.samples_final.sort(key = lambda sample : sample.start)
 
+    def assign_names(self):
+        i = 0
+        for sample in self.samples_final:
+            if isinstance(sample, AudioTableSample):
+                sample : AudioTableSample
+
+                sample.name = self.sample_name(sample, i)
+                sample.filename = self.sample_filename(sample, i)
+                i += 1
+            else:
+                sample : AudioTableData
+
+                name = self.blob_filename(sample.start, sample.end)
+                sample.name = name
+                sample.filename = f"{name}.bin"
+
     def to_xml(self, base_path):
         xml = XMLWriter()
 
         start = {
-            "Name"        : f"Bank{self.bank_num}",
+            "Name"        : self.name,
             "Index"       : self.bank_num,
             "Medium"      : self.table_entry.medium.name,
             "CachePolicy" : self.table_entry.cache_policy.name,
@@ -537,25 +596,20 @@ class AudioTableFile:
             xml.write_element("Pointer", { "Index" : index })
 
         # write samples/blobs
-        i = 0
         for sample in self.samples_final:
             if isinstance(sample, AudioTableSample):
                 sample : AudioTableSample
 
-                ext = ".half.aifc" if sample.header.codec == AudioSampleCodec.CODEC_SMALL_ADPCM else ".aifc"
-
                 xml.write_element("Sample", {
-                    "Name" : self.sample_name(i),
-                    "Path" : f"build/{base_path}/{self.sample_filename(i)}{ext}", # TODO use build dir?
+                    "Name" : sample.name,
+                    "Path" : f"build/{base_path}/{sample.filename}",
                 })
-                i += 1
             else:
                 sample : AudioTableData
 
-                name = f"UNACCOUNTED_{sample.start:X}_{sample.end:X}"
                 xml.write_element("Blob", {
-                    "Name" : name,
-                    "Path" : f"{base_path}/{name}.bin", # TODO use build dir?
+                    "Name" : sample.name,
+                    "Path" : f"{base_path}/{sample.filename}",
                 })
 
         xml.write_end_tag()
@@ -568,7 +622,7 @@ class AudioTableFile:
         xml.write_comment("This file is only for extraction of vanilla data. For other purposes see assets/audio/samplebanks/")
 
         start = {
-            "Name"  : f"Bank{self.bank_num}",
+            "Name"  : self.name,
             "Index" : self.bank_num,
         }
         xml.write_start_tag("SampleBank", start)
@@ -579,9 +633,10 @@ class AudioTableFile:
                 sample : AudioTableSample
 
                 xml.write_element("Sample", {
-                    "Name"       : self.sample_name(i),
+                    "Name"       : sample.name,
+                    "FileName"   : sample.filename.replace(".half.aifc", "").replace(".aifc", ""),
                     "Offset"     : f"0x{sample.header.sample_addr:06X}",
-                    "Size"       : f"0x{sample.header.size:04X}",
+                    # "Size"     : f"0x{sample.header.size:04X}",
                     "SampleRate" : sample.sample_rate,
                     "BaseNote"   : sample.base_note,
                 })
@@ -590,7 +645,7 @@ class AudioTableFile:
                 sample : AudioTableData
 
                 xml.write_element("Blob", {
-                    "Name"   : f"UNACCOUNTED_{sample.start:X}_{sample.end:X}",
+                    "Name"   : sample.name,
                     "Offset" : f"0x{sample.start:06X}",
                     "Size"   : f"0x{sample.end - sample.start:X}",
                 })
