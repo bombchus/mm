@@ -23,7 +23,6 @@ typedef struct sample_data {
     int base_note;
     bool is_dd;
     bool cached;
-
     aifc_data aifc;
 } sample_data;
 
@@ -34,6 +33,7 @@ typedef struct {
 
 typedef struct envelope_data {
     struct envelope_data *next;
+
     const char *name;
     uint8_t release;
     envelope_point *points;
@@ -43,9 +43,6 @@ typedef struct envelope_data {
 
 typedef struct instr_data {
     struct instr_data *next;
-
-    struct instr_data *next_struct;
-    struct instr_data *prev_struct;
 
     unsigned int program_number;
     const char *name;
@@ -69,11 +66,9 @@ typedef struct instr_data {
     const char *sample_name_high;
     int8_t sample_low_end;
     int8_t sample_high_start;
-
     sample_data *sample_low;
     sample_data *sample_mid;
     sample_data *sample_high;
-
     float sample_low_tuning;
     float sample_mid_tuning;
     float sample_high_tuning;
@@ -86,11 +81,11 @@ typedef struct drum_data {
     const char *sample_name;
     const char *envelope_name;
     envelope_data *envelope;
+    uint8_t release;
     int8_t note;
     int8_t note_start;
     int8_t note_end;
     int pan;
-
     sample_data *sample;
     double sample_rate;
     int8_t base_note;
@@ -101,7 +96,6 @@ typedef struct sfx_data {
 
     const char *name;
     const char *sample_name;
-
     sample_data *sample;
     double sample_rate;
     int8_t base_note;
@@ -120,6 +114,7 @@ typedef struct {
         const char *bank_path;
         int pointer_index;
         const char *bank_path_dd;
+        int pointer_index_dd;
         unsigned int pad_to_size;
         unsigned int num_instruments; // or the maximum program number (+1), since this also includes empty slots
                                       // between instruments

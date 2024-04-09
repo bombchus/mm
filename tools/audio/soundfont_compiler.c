@@ -461,8 +461,6 @@ read_instrs_info(soundfont *sf, xmlNodePtr instrs)
 
         // printf("INSTRUMENT [%s, %s, %s]\n", instr->sample_name_low, instr->sample_name_mid, instr->sample_name_high);
 
-        // TODO select sb or sbdd based on whether IsDD is true/false for this sample
-
         if (instr->sample_name_low != NULL) {
             instr->sample_low = sample_data_forname(sf, instr->sample_name_low);
             if (instr->sample_low == NULL)
@@ -535,6 +533,7 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
         { "NoteEnd",    true,  xml_parse_note_number,  offsetof(drum_data, note_end)     },
         { "Pan",        false, xml_parse_int,          offsetof(drum_data, pan)          },
         { "Envelope",   false, xml_parse_c_identifier, offsetof(drum_data, envelope_name)},
+        { "Release",    true,  xml_parse_u8,           offsetof(drum_data, release)      },
         { "Sample",     false, xml_parse_c_identifier, offsetof(drum_data, sample_name)  },
         { "SampleRate", true,  xml_parse_double,       offsetof(drum_data, sample_rate)  },
         { "BaseNote",   true,  xml_parse_note_number,  offsetof(drum_data, base_note)    },
@@ -554,6 +553,7 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
         drum->note_end = NOTE_UNSET;
         drum->sample_rate = -1;
         drum->base_note = NOTE_UNSET;
+        drum->release = RELEASE_UNSET;
 
         if (drum_node->properties == NULL) {
             // <Drum/>
@@ -571,6 +571,9 @@ read_drums_info(soundfont *sf, xmlNodePtr drums)
             error("Bad envelope name %s (line %d)\n", drum->envelope_name, drum_node->line);
 
         // validate optionals
+        if (drum->release == RELEASE_UNSET)
+            drum->release = drum->envelope->release;
+
         if (drum->note == NOTE_UNSET) {
             if (drum->note_start == NOTE_UNSET || drum->note_end == NOTE_UNSET)
                 error("Incomplete note range specification\n");
@@ -721,7 +724,9 @@ read_samples_info(soundfont *sf, xmlNodePtr samples)
         //        sample->name, sample->sample_rate, sample->base_note, BOOL_STR(sample->is_dd),
         //        BOOL_STR(sample->cached));
 
-        const char *sample_path = samplebank_path_forname(&sf->sb, sample->name);
+        samplebank *sb = (sample->is_dd) ? &sf->sbdd : &sf->sb;
+
+        const char *sample_path = samplebank_path_forname(sb, sample->name);
         if (sample_path == NULL)
             error("Bad sample name"); // TODO
 
@@ -1034,6 +1039,8 @@ emit_c_samples(FILE *out, soundfont *sf)
 
         // Write the sample header
 
+        samplebank *sb = (sample->is_dd) ? &sf->sbdd : &sf->sb;
+
         fprintf(out,
                 // clang-format off
                "extern u8 %s_%s_Off[];"         "\n"
@@ -1041,7 +1048,7 @@ emit_c_samples(FILE *out, soundfont *sf)
                "extern AdpcmLoop SF%d_%s_LOOP;" "\n"
                                                 "\n",
                 // clang-format on
-                sf->sb.name, sample->name, sf->info.index, bookname, sf->info.index, sample->name);
+                sb->name, sample->name, sf->info.index, bookname, sf->info.index, sample->name);
 
         const char *codec_name = codec_enum(sample->aifc.compression_type, sample->aifc.path);
 
@@ -1057,8 +1064,7 @@ emit_c_samples(FILE *out, soundfont *sf)
                                                             "\n",
                 // clang-format on
                 sf->info.index, sample->name, 0, codec_name, sample->is_dd, BOOL_STR(sample->cached), BOOL_STR(false),
-                sample->aifc.ssnd_size, sf->sb.name, sample->name, sf->info.index, sample->name, sf->info.index,
-                bookname);
+                sample->aifc.ssnd_size, sb->name, sample->name, sf->info.index, sample->name, sf->info.index, bookname);
         size += 0x10;
 
         // Write the book if it hasn't been deduplicated.
@@ -1213,9 +1219,8 @@ emit_c_envelopes(FILE *out, soundfont *sf)
     size_t empty_num = 0;
 
     LL_FOREACH(envelope_data *, envdata, sf->envelopes) {
-        if (envdata->name == NULL) {
-            // For MM: write 16 bytes of 0
-            // TODO ignore when nonmatching
+        if (sf->matching && envdata->name == NULL) {
+            // For MM: write 16 bytes of 0 when matching
 
             fprintf(out,
                     // clang-format off
@@ -1380,10 +1385,8 @@ emit_c_drums(FILE *out, soundfont *sf)
                "    }"                                      "\n"
                "NO_REORDER DATA Drum SF%d_%s[%lu] = {"      "\n",
                 // clang-format on
-                sf->info.index, drum->name,
-                drum->envelope->release, // TODO expose override
-                drum->pan, sf->info.index, drum->sample->name, sf->info.index, drum->envelope->name, sf->info.index,
-                drum->name, length);
+                sf->info.index, drum->name, drum->release, drum->pan, sf->info.index, drum->sample->name,
+                sf->info.index, drum->envelope->name, sf->info.index, drum->name, length);
 
         // Write each structure while building the drum pointer table
 

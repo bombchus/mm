@@ -44,9 +44,9 @@ typedef BIG_ENDIAN_STRUCT
 }
 Elf32_Ehdr;
 
-#define ELF32_HAS_MAGIC(ehdr)                                                                  \
-    ((ehdr)->e_ident[0] == '\x7F' && (ehdr)->e_ident[1] == 'E' && (ehdr)->e_ident[2] == 'L' && \
-     (ehdr)->e_ident[3] == 'F')
+#define ELF32_HAS_MAGIC(ehdr)                                                                                    \
+    ((ehdr)->e_ident[EI_MAG0] == '\x7F' && (ehdr)->e_ident[EI_MAG1] == 'E' && (ehdr)->e_ident[EI_MAG2] == 'L' && \
+     (ehdr)->e_ident[EI_MAG3] == 'F')
 
 #define ELF32_IS_32(ehdr) ((ehdr)->e_ident[EI_CLASS] == 1 /*EI_CLASS_32*/)
 
@@ -126,13 +126,13 @@ Elf32_Sym;
 #define SB_GLOBAL 1
 #define SB_WEAK   2
 
-#define ELF32_ERR_PREFIX "[ELF32]"
+#define ELF32_ERR_PREFIX "[ELF32] "
 
 ELF32_QUALIFIERS void
 validate_read(size_t offset, size_t size, size_t data_size)
 {
     if (offset + size > data_size)
-        error(ELF32_ERR_PREFIX " Could not read %ld bytes at %08lX", size, offset);
+        error(ELF32_ERR_PREFIX "Could not read %ld bytes at %08lX", size, offset);
 }
 
 ELF32_QUALIFIERS void *
@@ -141,18 +141,18 @@ elf32_read(const char *path, size_t *data_size_out)
     size_t data_size;
     void *data = util_read_whole_file(path, &data_size);
     if (data == NULL)
-        error(ELF32_ERR_PREFIX " File is empty?");
+        error(ELF32_ERR_PREFIX "File is empty?");
 
     validate_read(0, sizeof(Elf32_Ehdr), data_size);
 
     Elf32_Ehdr *ehdr = GET_PTR(data, 0);
 
     if (!ELF32_HAS_MAGIC(ehdr))
-        error(ELF32_ERR_PREFIX " Not an ELF file?");
+        error(ELF32_ERR_PREFIX "Not an ELF file?");
     if (!ELF32_IS_32(ehdr))
-        error(ELF32_ERR_PREFIX " Not ELF32?");
+        error(ELF32_ERR_PREFIX "Not ELF32?");
     if (!ELF32_IS_BE(ehdr))
-        error(ELF32_ERR_PREFIX " Not big-endian?");
+        error(ELF32_ERR_PREFIX "Not big-endian?");
 
     *data_size_out = data_size;
     return data;

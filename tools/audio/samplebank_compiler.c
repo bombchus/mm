@@ -99,6 +99,7 @@ main(int argc, char **argv)
                    "# BLOB %s"          "\n"
                                         "\n"
                    ".incbin \"%s\""     "\n"
+                                        "\n"
                    ".balign 16"         "\n"
                                         "\n",
                     // clang-format on

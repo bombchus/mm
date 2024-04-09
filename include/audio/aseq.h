@@ -1769,9 +1769,15 @@ $reladdr\@:
 .endm
 
 #define STEREO_OPCODE 0xCD
-.macro stereo arg
+.macro stereo type, strongR, strongL, strongRvrbR, strongRvrbL
+    _check_arg_bitwidth_u \type, 2
+    _check_arg_bitwidth_u \strongR, 1
+    _check_arg_bitwidth_u \strongL, 1
+    _check_arg_bitwidth_u \strongRvrbR, 1
+    _check_arg_bitwidth_u \strongRvrbL, 1
+
     _wr_cmd_id  stereo, ,,STEREO_OPCODE,,,,,, 0, 0
-    _wr_u8      \arg
+    _wr_u8      (\type << 4) | (\strongR << 3) | (\strongL << 2) | (\strongRvrbR << 1) | (\strongRvrbL << 0)
 .endm
 
 .macro ldshortvel velocity

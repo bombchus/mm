@@ -37,10 +37,9 @@ For tables used in `dyncall`s, we have to rely on external information to provid
 there is no reliable heuristic for identifying table sizes.
 """
 
-import re
 from dataclasses import dataclass
 from enum import Enum, auto
-from typing import Callable, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 from audiobank_file import AudiobankFile
 
@@ -226,6 +225,16 @@ class ArgPortamentoMode(ArgHex8):
         disas.portamento_is_special = (ret & 0x80) != 0
         return ret
 
+class ArgStereoConfig(ArgU8):
+    def emit(self, disas):
+        assert (self.value & 0b11000000) == 0
+        type = (self.value >> 4) & 0b11
+        strong_right = (self.value >> 3) & 1
+        strong_left = (self.value >> 2) & 1
+        strong_rvrb_right = (self.value >> 1) & 1
+        strong_rvrb_left = (self.value >> 0) & 1
+        return f"{type}, {strong_right}, {strong_left}, {strong_rvrb_right}, {strong_rvrb_left}"
+
 class ArgPortamentoTime(ArgVar):
     def read(self, disas):
         if disas.portamento_is_special:
@@ -406,10 +415,10 @@ def nesting_incr(cmd, disas):
     disas.nesting += 1
 
 def set_short(cmd, disas):
-    disas.large = False
+    disas.large_notes = False
 
 def set_large(cmd, disas):
-    disas.large = True
+    disas.large_notes = True
 
 #
 #   NOTE: Changes here must be reflected in aseq.h for re-assembly
@@ -585,7 +594,7 @@ CMD_SPEC = (
     MMLCmd(cmd_id=0xCA, mnemonic='notepan',        sections=(SqSection.LAYER,), args=(ArgU8,)),
     MMLCmd(cmd_id=0xCB, mnemonic='env',            sections=(SqSection.LAYER,), args=(ArgEnvPtr, ArgU8,)),
     MMLCmd(cmd_id=0xCC, mnemonic='nodrumpan',      sections=(SqSection.LAYER,)),
-    MMLCmd(cmd_id=0xCD, mnemonic='stereo',         sections=(SqSection.LAYER,), args=(ArgU8,)),
+    MMLCmd(cmd_id=0xCD, mnemonic='stereo',         sections=(SqSection.LAYER,), args=(ArgStereoConfig,)),
     MMLCmd(cmd_id=0xCE, mnemonic='bendfine',       sections=(SqSection.LAYER,), args=(ArgS8,)),
     MMLCmd(cmd_id=0xCF, mnemonic='releaserate',    sections=(SqSection.LAYER,), args=(ArgU8,)),
     MMLCmd(cmd_id=0xD0, mnemonic='ldshortvel',     sections=(SqSection.LAYER,), args=(ArgBits4,)),
@@ -661,7 +670,8 @@ class SequenceFragment:
 
 class SequenceDisassembler:
 
-    def __init__(self, seq_num, data, tables, cmds, version, outpath, seq_name, used_fonts : List[AudiobankFile], all_seq_names):
+    def __init__(self, seq_num : int, data : bytes, tables, cmds : Tuple[MMLCmd], version : MMLVersion, outpath : str,
+                 seq_name : str, used_fonts : List[AudiobankFile], all_seq_names):
         self.seq_num = seq_num
         self.seq_name = seq_name
         self.used_fonts = used_fonts
@@ -675,14 +685,42 @@ class SequenceDisassembler:
         self.cur_section = SqSection.SEQ
         self.nesting = 0
         self.portamento_is_special = False
+        self.large_notes = True
 
         self.outpath = outpath
 
-        self.cmds = list(cmds)
-        # remove commands not in this version
-        for i,cmd in enumerate(self.cmds):
+        self.cmds : Dict[SqSection, Dict[int, MMLCmd]] = {
+            SqSection.SEQ : {},
+            SqSection.CHAN : {},
+            SqSection.LAYER : {},
+        }
+
+        # preprocess command list into dictionary, possibly duplicating into several id keys if any lsbits are used
+        # as an arg
+        for cmd in cmds:
+            # ignore commands not in this version
             if version not in cmd.version:
-                del self.cmds[i]
+                continue
+
+            # find number of lsbits that don't contribute to the command id
+            if len(cmd.args) > 0 and issubclass(cmd.args[0], MMLArgBits):
+                nbits = cmd.args[0].NBITS
+            else:
+                nbits = 0
+
+            id = cmd.cmd_id
+
+            for section in cmd.sections:
+                cmds_s = self.cmds[section]
+
+                for i in range(1 << nbits):
+                    new = cmd
+                    old = cmds_s.get(id + i, None)
+                    if old is not None:
+                        assert old.mnemonic in ("notedvg", "notedv", "notevg"), (old.mnemonic, cmd.mnemonic)
+                        new = (old, cmd)
+
+                    cmds_s[id + i] = new
 
         self.force_long = set()
 
@@ -707,54 +745,6 @@ class SequenceDisassembler:
 
         self.unused = []
 
-    # config readers
-
-    def get_header_symbols(self, header_content):
-        MODE_NONE = -1
-        MODE_INSTRUMENT = 0
-        MODE_DRUM = 1
-        MODE_EFFECT = 2
-
-        map = {
-            MODE_INSTRUMENT : {},
-            MODE_DRUM       : {},
-            MODE_EFFECT     : {},
-        }
-
-        current_mode = MODE_NONE
-
-        for line in header_content.split("\n"):
-            if current_mode == MODE_NONE and " INSTRUMENTS " in line:
-                current_mode = MODE_INSTRUMENT
-                continue
-            elif current_mode == MODE_INSTRUMENT and " DRUMS " in line:
-                current_mode = MODE_DRUM
-                continue
-            elif current_mode == MODE_DRUM and " EFFECTS " in line:
-                current_mode = MODE_EFFECT
-                continue
-
-            if ".define" in line and current_mode != MODE_NONE:
-                sym, index = re.match(r"\.define ([A-Z_0-9]+)\s+(\d+)", line).groups()
-                map[current_mode][int(index)] = sym
-
-        return (collection for _,collection in map.items())
-
-    def get_sequence_symbols(seq_syms_content):
-        symbols = (
-            ("PITCH",     {}),
-            ("SOUNDFONT", {})
-        )
-
-        for line in seq_syms_content.split("\n"):
-            for find,collection in symbols:
-                if find in line:
-                    sym, id = re.match(r"\.define ([A-Z_0-9]+)\s+(\d+)", line).groups()
-                    collection[int(id)] = sym
-                    break
-
-        return (collection for _,collection in symbols)
-
     # general helpers
 
     def read_bits(self, nbits):
@@ -778,31 +768,22 @@ class SequenceDisassembler:
     def read_s16(self):
         return sign_extend(self.read_u16(), 16)
 
-    def lookup_cmd(self, id) -> MMLCmd:
-        for cmd in self.cmds:
-            cmd : MMLCmd
+    def lookup_cmd(self, id : int) -> MMLCmd:
+        # lookup command info
+        cmd : MMLCmd = self.cmds[self.cur_section].get(id, None)
+        assert cmd is not None , (self.cur_section, id)
 
-            if self.cur_section not in cmd.sections:
-                continue
+        if isinstance(cmd, tuple):
+            # select based on whether we're dealing with large or short notes
+            cmd = cmd[int(not self.large_notes)]
 
-            mask = 0
-            bits_val = None
+        # part of the command byte may be an arg, save the value
+        mask = 0
+        if len(cmd.args) > 0 and issubclass(cmd.args[0], MMLArgBits):
+            mask = (1 << cmd.args[0].NBITS) - 1
+        self.bits_val = id & mask
 
-            if len(cmd.args) > 0 and issubclass(cmd.args[0], MMLArgBits):
-                # strip bits arg
-                mask = (1 << cmd.args[0].NBITS) - 1
-                bits_val = id & mask
-
-            # TODO check large vs short for
-            # notedvg   vs  shortdvg
-            # notedv    vs  shortdv
-            # notevg    vs  shortvg
-
-            if self.cur_section in cmd.sections and cmd.cmd_id == (id & ~mask):
-                self.bits_val = bits_val
-                return cmd
-
-        return None
+        return cmd
 
     #
     #   analysis helpers
@@ -1230,14 +1211,6 @@ class SequenceDisassembler:
 
         outfile.write("\n")
 
-    """
-    def decode_filter(self):
-        start_pos = self.pos
-        end_pos = self.pos
-
-        return f"/* [{start_pos:X}:{end_pos:X}] */ filter {' '.join(0 for _ in range(8))}"
-    """
-
     def disas_filter(self, frag : SequenceFragment, outfile):
         start_pos = self.pos
 
@@ -1251,27 +1224,6 @@ class SequenceDisassembler:
         for n in range(num_filters):
             self.emit_branch_target_real(outfile, start_pos + n * 2 * 8, SqSection.FILTER, force_big=True)
             outfile.write("    filter 0, 0, 0, 0, 0, 0, 0, 0\n\n")
-
-    """
-    def decode_envelope(self):
-        start_pos = self.pos
-
-        disas = ""
-
-        while True:
-            a = self.read_s16()
-            b = self.read_u16()
-
-            if a < 0:
-                cmd = ["disable", "hang", f"goto {b}", "restart"][-a]
-                disas += cmd + "\n"
-                break
-            else:
-                disas += f'point {a}, {b}\n'
-
-        end_pos = self.pos
-        return f"[{start_pos:X}:{end_pos:X}]\n" + disas
-    """
 
     def disas_envelope(self, frag : SequenceFragment, outfile):
         start_pos = self.pos
@@ -1376,6 +1328,12 @@ if __name__ == '__main__':
     with open(in_path, "rb") as infile:
         data = bytearray(infile.read())
 
-    disas = SequenceDisassembler(0, data, None, CMD_SPEC, MMLVersion.OOT, out_path, [])
+    class FontDummy:
+        def __init__(self, file_name) -> None:
+            self.name = file_name
+            self.file_name = file_name
+            self.instrument_index_map = {}
+
+    disas = SequenceDisassembler(0, data, None, CMD_SPEC, MMLVersion.MM, out_path, "", [FontDummy("wow")], [])
     disas.analyze()
     disas.emit()

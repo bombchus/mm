@@ -33,6 +33,7 @@ read_soundfont_info(soundfont *sf, xmlNodePtr node)
         { "SampleBank",      false, xml_parse_string,       offsetof(soundfont, info.bank_path)        },
         { "Indirect",        true,  xml_parse_int,          offsetof(soundfont, info.pointer_index)    },
         { "SampleBankDD",    true,  xml_parse_string,       offsetof(soundfont, info.bank_path_dd)     },
+        { "IndirectDD",      true,  xml_parse_int,          offsetof(soundfont, info.pointer_index_dd) },
         { "LoopsHaveFrames", true,  xml_parse_bool,         offsetof(soundfont, info.loops_have_frames)},
         { "NumInstruments",  true,  xml_parse_uint,         offsetof(soundfont, info.num_instruments)  },
         { "PadToSize",       true,  xml_parse_uint,         offsetof(soundfont, info.pad_to_size)      },
@@ -42,6 +43,7 @@ read_soundfont_info(soundfont *sf, xmlNodePtr node)
     sf->info.num_effects = 0;
     sf->info.bank_path_dd = NULL;
     sf->info.pointer_index = -1;
+    sf->info.pointer_index_dd = -1;
     sf->info.loops_have_frames = false;
     sf->info.pad_to_size = 0;
     xml_parse_node_by_spec(sf, node, spec, ARRAY_COUNT(spec));

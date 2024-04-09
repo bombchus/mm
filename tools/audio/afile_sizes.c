@@ -38,8 +38,7 @@ file_handler(const char *path, FILE *out, size_t *total_num)
         validate_read(symtab->sh_offset + i * sizeof(Elf32_Sym), sizeof(Elf32_Sym), data_size);
 
         // The start and size symbol should be defined and global
-        int bind = sym->st_info >> 4;
-        if (bind != SB_GLOBAL || sym->st_shndx == SHN_UND) {
+        if (sym->st_shndx == SHN_UND || (sym->st_info >> 4) != SB_GLOBAL) {
             continue;
         }
 

@@ -11,7 +11,6 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 
 from audio_tables import AudioCodeTable, AudioStorageMedium
-from audiobank_structs import AudioSampleCodec
 from audiotable import AudioTableData, AudioTableFile, AudioTableSample
 from audiobank_file import AudiobankFile
 from disassemble_sequence import CMD_SPEC, SequenceDisassembler
@@ -153,6 +152,14 @@ def extract_samplebank(pool : ThreadPool, sample_banks : List[AudioTableFile], b
 
     # TODO drop aifc dir
 
+def disassemble_one_sequence(version_info : GameVersionInfo, soundfonts : List[AudiobankFile], enum_names : List[str],
+                             id : int, data : bytes, name : str, filename : str, fonts : memoryview):
+    disas = SequenceDisassembler(id, data, SEQ_DISAS_HACKS[version_info.version_id].get(id, None), CMD_SPEC,
+                                 version_info.mml_version, f"assets/audio/sequences/{filename}.seq", name,
+                                 [soundfonts[i] for i in fonts], enum_names)
+    disas.analyze()
+    disas.emit()
+
 def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : memoryview, soundfonts : List[AudiobankFile],
                       rom_image : memoryview, version_info : GameVersionInfo, write_xml : bool,
                       sequence_xmls : Dict[int, Element]):
@@ -167,7 +174,7 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
 
     all_fonts = []
 
-    seq_enum_names = []
+    seq_enum_names : List[str] = []
     sequence_table_hdr = None
     with open(f"include/tables/sequence_table.h", "r") as infile:
         sequence_table_hdr = infile.read()
@@ -183,6 +190,8 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
     os.makedirs(f"assets/audio/sequences", exist_ok=True)
     if write_xml:
         os.makedirs(f"assets/xml/audio/sequences", exist_ok=True)
+
+    disas_jobs = []
 
     for i,entry in enumerate(sequence_table):
         entry : AudioCodeTable.AudioCodeTableEntry
@@ -202,7 +211,7 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
             sequence_font_table_cvg[j] = 1
 
         if entry.size != 0:
-            # Real sequence, extract
+            # Real sequence, queue extraction
 
             seq_data = bytearray(entry.data(rom_image, version_info.audioseq_rom))
 
@@ -233,7 +242,7 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
                     outfile.write(str(xml))
 
             if i in handwritten_sequences:
-                # skip writing out "handwritten" sequences
+                # skip "handwritten" sequences
                 continue
 
             # debugm("=======================================================")
@@ -241,11 +250,7 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
             # debugm("=======================================================")
             # debugm(entry)
 
-            disas = SequenceDisassembler(i, seq_data, SEQ_DISAS_HACKS[version_info.version_id].get(i, None), CMD_SPEC,
-                                         version_info.mml_version, f"assets/audio/sequences/{sequence_filename}.seq",
-                                         sequence_name, [soundfonts[i] for i in fonts], seq_enum_names)
-            disas.analyze()
-            disas.emit()
+            disas_jobs.append((i, seq_data, sequence_name, sequence_filename, fonts))
         else:
             # Pointer to another sequence, checked later
             # debugm("POINTER")
@@ -286,7 +291,16 @@ def extract_sequences(sequence_table : AudioCodeTable, sequence_font_table : mem
             assert fonts == fonts2, \
                    f"Font mismatch: Pointer {i} against Real {j}. This is a limitation of the build process."
 
-def do(version_name : str, rom_path : str, read_xml : bool, write_xml : bool):
+    # Disassemble to text
+
+    with ThreadPool(processes=os.cpu_count()) as pool:
+        # multiprocess sequence disassembly
+        async_results = [pool.apply_async(disassemble_one_sequence,
+                                          args=(version_info, soundfonts, seq_enum_names, *job)) for job in disas_jobs]
+        # block until done
+        [res.get() for res in async_results]
+
+def extract_audio_for_version(version_name : str, rom_path : str, read_xml : bool, write_xml : bool):
     print("Setting up...")
 
     # Get version info
@@ -440,4 +454,4 @@ if __name__ == '__main__':
     parser.add_argument("--write-xml", required=False, action="store_true", help="Write extraction xml files")
     args = parser.parse_args()
 
-    do(args.version, args.rom, args.read_xml, args.write_xml)
+    extract_audio_for_version(args.version, args.rom, args.read_xml, args.write_xml)

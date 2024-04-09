@@ -64,8 +64,7 @@ PYTHON ?= $(VENV)/$(VENV_BIN_DIR)/python3
 # Emulator w/ flags
 N64_EMULATOR ?=
 # Music Macro Language Version
-MML_VERSION := 1
-
+MML_VERSION := MML_VERSION_MM
 #### Setup ####
 
 # Ensure the map file being created using English localization
@@ -554,8 +553,8 @@ $(BUILD_DIR)/assets/audio/samples/%.aifc: assets/audio/samples/%.wav
 $(BUILD_DIR)/assets/audio/samplebanks/%.o: assets/audio/samplebanks/%.xml $(AIFC_FILES)
 	$(SBC) $< $(@:.o=.s)
 	$(AS) $(ASFLAGS) $(@:.o=.s) -o $@
-	$(OBJCOPY) -O binary -j.rodata $@ $(@:.o=.bin)
 # TESTING:
+#	$(OBJCOPY) -O binary -j.rodata $@ $(@:.o=.bin)
 #	@cmp $(@:.o=.bin) $(patsubst $(BUILD_DIR)/assets/audio/samplebanks/%,baserom/audiotable_files/%,$(@:.o=.bin)) && echo "$(<F) OK"
 
 # also assemble the soundfonts and generate the associated headers... TODO have sfc handle dependency generation?
@@ -629,8 +628,6 @@ $(BUILD_DIR)/src/audio/tables/soundfont_table.o: src/audio/tables/soundfont_tabl
 # TESTING:
 #	$(OBJCOPY) -O binary -j.rodata $@ $(@:.o=.bin)
 # Can't compare this due to pointers
-
-STRIP := $(MIPS_BINUTILS_PREFIX)strip
 
 $(BUILD_DIR)/src/audio/tables/sequence_table.o: src/audio/tables/sequence_table.c $(SEQUENCE_TABLE)
 	$(CC_CHECK) -I include/tables $<

@@ -252,7 +252,7 @@ tablegen_soundfonts(const char *sf_hdr_out, char **soundfonts_paths, int num_sou
 
         int dd_idx = 255;
         if (sf->info.bank_path_dd != NULL)
-            dd_idx = validate_samplebank_index(&sf->sbdd, sf->info.pointer_index); // TODO pointer_index_dd
+            dd_idx = validate_samplebank_index(&sf->sbdd, sf->info.pointer_index_dd);
 
         // Add info
 

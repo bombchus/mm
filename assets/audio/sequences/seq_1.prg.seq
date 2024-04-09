@@ -523,7 +523,7 @@ CHAN_0337:
     .byte 60, 115, 100, 100
 
 .layer LAYER_0368
-/* 0x0368 [0xCD 0x14               ] */ stereo      20
+/* 0x0368 [0xCD 0x14               ] */ stereo      1, 0, 1, 0, 0
 /* 0x036A [0xC2 0x09               ] */ transpose   9
 /* 0x036C [0xF4 0x00               ] */ rjump       LAYER_036E
 
@@ -1557,7 +1557,7 @@ LAYER_0D61:
 /* 0x0D6A [0xF4 0xF0               ] */ rjump       LAYER_0D5C
 
 .layer LAYER_0D6C
-/* 0x0D6C [0xCD 0x14               ] */ stereo      20
+/* 0x0D6C [0xCD 0x14               ] */ stereo      1, 0, 1, 0, 0
 /* 0x0D6E [0xC4                    ] */ legato
 /* 0x0D6F [0xC7 0x01 0x22 0x64     ] */ portamento  0x01, PITCH_G3, 100
 LAYER_0D73:
@@ -1661,7 +1661,7 @@ CHAN_0E05:
 .layer LAYER_0E14
 /* 0x0E14 [0xC2 0xF4               ] */ transpose   -12
 LAYER_0E16:
-/* 0x0E16 [0xCD 0x14               ] */ stereo      20
+/* 0x0E16 [0xCD 0x14               ] */ stereo      1, 0, 1, 0, 0
 /* 0x0E18 [0xF4 0x00               ] */ rjump       LAYER_0E1A
 
 .layer LAYER_0E1A
@@ -1691,9 +1691,9 @@ LAYER_0E38:
 LAYER_0E3C:
 /* 0x0E3C [0x67 0x80 0xC8 0x7F     ] */ notedv      PITCH_C4, 200, 127
 LAYER_0E40:
-/* 0x0E40 [0xCD 0x14               ] */ stereo      20
+/* 0x0E40 [0xCD 0x14               ] */ stereo      1, 0, 1, 0, 0
 /* 0x0E42 [0x4C 0x28 0x50          ] */ notedv      PITCH_A1, 40, 80
-/* 0x0E45 [0xCD 0x00               ] */ stereo      0
+/* 0x0E45 [0xCD 0x00               ] */ stereo      0, 0, 0, 0, 0
 /* 0x0E47 [0xFF                    ] */ end
 
 .channel CHAN_0E48

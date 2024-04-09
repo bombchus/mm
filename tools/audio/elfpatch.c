@@ -35,7 +35,7 @@ main(int argc, char **argv)
     for (size_t i = 0; sym < sym_end; sym++, i++) {
         validate_read(symtab->sh_offset + i * sizeof(Elf32_Sym), sizeof(Elf32_Sym), data_size);
 
-        if (sym->st_shndx != SHN_UND && sym->st_shndx != SHN_ABS)
+        if (sym->st_shndx != SHN_UND)
             sym->st_shndx = SHN_ABS;
     }
 
