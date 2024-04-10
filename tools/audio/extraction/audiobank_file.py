@@ -852,7 +852,7 @@ class AudiobankFile:
             "Index"       : self.bank_num,
             "Medium"      : self.table_entry.medium.name,
             "CachePolicy" : self.table_entry.cache_policy.name,
-            "SampleBank"  : f"{samplebanks_base}/{self.bank1.file_name}.xml",
+            "SampleBank"  : f"$(BUILD_DIR)/{samplebanks_base}/{self.bank1.file_name}.xml",
         }
 
         # If the samplebank1 index is not the true index (that is it's a pointer), write an Indirect
@@ -860,7 +860,7 @@ class AudiobankFile:
             start["Indirect"] = self.bank1_num
 
         if self.bank2_num != 255: # bank2 is not None if bank2_num != 255
-            start["SampleBankDD"] = f"{samplebanks_base}/{self.bank2.file_name}.xml",
+            start["SampleBankDD"] = f"$(BUILD_DIR)/{samplebanks_base}/{self.bank2.file_name}.xml",
             # TODO we should really write an indirect for DD banks too if bank2_num != bank2.bank_num
 
         if self.loops_have_frames:

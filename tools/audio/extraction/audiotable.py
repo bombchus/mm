@@ -602,7 +602,7 @@ class AudioTableFile:
 
                 xml.write_element("Sample", {
                     "Name" : sample.name,
-                    "Path" : f"build/{base_path}/{sample.filename}",
+                    "Path" : f"$(BUILD_DIR)/{base_path}/{sample.filename}",
                 })
             else:
                 sample : AudioTableData

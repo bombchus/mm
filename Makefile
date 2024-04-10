@@ -171,9 +171,9 @@ AFILE_SIZES   := tools/audio/afile_sizes
 SEQ_CPP       := cpp -fno-dollars-in-identifiers
 SEQ_CPPFLAGS  := -D_LANGUAGE_ASEQ -DMML_VERSION=$(MML_VERSION) -I include/audio -I include/tables/sfx -I $(BUILD_DIR)/assets/audio/soundfonts
 
-# Command to replace path variables in the spec file. We can't use the C
-# preprocessor for this because it won't substitute inside string literals.
-SPEC_REPLACE_VARS := sed -e 's|$$(BUILD_DIR)|$(BUILD_DIR)|g'
+# Command to replace $(BUILD_DIR) in some files with the build path.
+# We can't use the C preprocessor for this because it won't substitute inside string literals.
+BUILD_DIR_REPLACE := sed -e 's|$$(BUILD_DIR)|$(BUILD_DIR)|g'
 
 CFLAGS           += -G 0 -non_shared -Xcpluscomm -nostdinc -Wab,-r4300_mul
 
@@ -228,10 +228,12 @@ AIFC_FILES := $(foreach f,$(AIFF_FILES),$(BUILD_DIR)/$(f:.wav=.aifc))
 
 SAMPLEBANK_DIRS := $(shell find assets/audio/samplebanks -type d)
 SAMPLEBANK_XMLS := $(foreach dir,$(SAMPLEBANK_DIRS),$(wildcard $(dir)/*.xml))
+SAMPLEBANK_BUILD_XMLS := $(foreach f,$(SAMPLEBANK_XMLS),$(BUILD_DIR)/$f)
 SAMPLEBANK_O_FILES := $(foreach f,$(SAMPLEBANK_XMLS),$(BUILD_DIR)/$(f:.xml=.o))
 
 SOUNDFONT_DIRS := $(shell find assets/audio/soundfonts -type d)
 SOUNDFONT_XMLS := $(foreach dir,$(SOUNDFONT_DIRS),$(wildcard $(dir)/*.xml))
+SOUNDFONT_BUILD_XMLS := $(foreach f,$(SOUNDFONT_XMLS),$(BUILD_DIR)/$f)
 SOUNDFONT_O_FILES := $(foreach f,$(SOUNDFONT_XMLS),$(BUILD_DIR)/$(f:.xml=.o))
 SOUNDFONT_HEADERS := $(foreach f,$(SOUNDFONT_XMLS),$(BUILD_DIR)/$(f:.xml=.h))
 
@@ -269,7 +271,7 @@ O_FILES        := $(foreach f,$(S_FILES:.s=.o),$(BUILD_DIR)/$f) \
 SHIFTJIS_C_FILES := src/libultra/voice/voicecheckword.c src/audio/voice_external.c src/code/z_message.c src/code/z_message_nes.c
 SHIFTJIS_O_FILES := $(foreach f,$(SHIFTJIS_C_FILES:.c=.o),$(BUILD_DIR)/$f)
 
-OVL_RELOC_FILES := $(shell $(CPP) $(CPPFLAGS) $(SPEC) | $(SPEC_REPLACE_VARS) | grep -o '[^"]*_reloc.o' )
+OVL_RELOC_FILES := $(shell $(CPP) $(CPPFLAGS) $(SPEC) | $(BUILD_DIR_REPLACE) | grep -o '[^"]*_reloc.o' )
 
 SCHEDULE_INC_FILES := $(foreach f,$(SCHEDULE_FILES:.schl=.schl.inc),$(BUILD_DIR)/$f)
 
@@ -407,12 +409,15 @@ venv:
 	$(PYTHON) -m pip install -U -r requirements.txt
 
 ## Extraction step
+audio-setup:
+	$(AUDIO_EXTRACT) -r $(BASEROM_DIR)/baserom-decompressed.z64 -v mm_u0 --read-xml
+
 setup:
 	$(MAKE) -C tools
 	$(PYTHON) tools/buildtools/decompress_baserom.py $(VERSION)
 	$(PYTHON) tools/buildtools/extract_baserom.py $(BASEROM_DIR)/baserom-decompressed.z64 -o $(EXTRACTED_DIR)/baserom --dmadata-start `cat $(BASEROM_DIR)/dmadata_start.txt` --dmadata-names $(BASEROM_DIR)/dmadata_names.txt
 	$(PYTHON) tools/buildtools/extract_yars.py $(VERSION)
-	$(AUDIO_EXTRACT) -r baserom_uncompressed.z64 -v mm_u0 --read-xml
+	$(MAKE) -C audio-setup
 
 assets:
 	$(PYTHON) extract_assets.py -j $(N_THREADS) -Z Wno-hardcoded-pointer
@@ -452,7 +457,7 @@ $(BUILD_DIR)/%.ld: %.ld
 	$(CPP) $(CPPFLAGS) $(IINC) $< > $@
 
 $(BUILD_DIR)/$(SPEC): $(SPEC)
-	$(CPP) $(CPPFLAGS) $< | $(SPEC_REPLACE_VARS) > $@
+	$(CPP) $(CPPFLAGS) $< | $(BUILD_DIR_REPLACE) > $@
 
 $(LDSCRIPT): $(BUILD_DIR)/$(SPEC)
 	$(MKLDSCRIPT) $< $@
@@ -550,7 +555,10 @@ $(BUILD_DIR)/assets/audio/samples/%.aifc: assets/audio/samples/%.wav
 
 # then assemble the samplebanks... TODO have sbc handle dependency generation?
 
-$(BUILD_DIR)/assets/audio/samplebanks/%.o: assets/audio/samplebanks/%.xml $(AIFC_FILES)
+$(BUILD_DIR)/assets/audio/samplebanks/%.xml: assets/audio/samplebanks/%.xml
+	cat $< | $(BUILD_DIR_REPLACE) > $@
+
+$(BUILD_DIR)/assets/audio/samplebanks/%.o: $(BUILD_DIR)/assets/audio/samplebanks/%.xml $(AIFC_FILES)
 	$(SBC) $< $(@:.o=.s)
 	$(AS) $(ASFLAGS) $(@:.o=.s) -o $@
 # TESTING:
@@ -559,8 +567,11 @@ $(BUILD_DIR)/assets/audio/samplebanks/%.o: assets/audio/samplebanks/%.xml $(AIFC
 
 # also assemble the soundfonts and generate the associated headers... TODO have sfc handle dependency generation?
 
+$(BUILD_DIR)/assets/audio/soundfonts/%.xml: assets/audio/soundfonts/%.xml
+	cat $< | $(BUILD_DIR_REPLACE) > $@
+
 .PRECIOUS: $(BUILD_DIR)/assets/audio/soundfonts/%.c $(BUILD_DIR)/assets/audio/soundfonts/%.h $(BUILD_DIR)/assets/audio/soundfonts/%.name
-$(BUILD_DIR)/assets/audio/soundfonts/%.c $(BUILD_DIR)/assets/audio/soundfonts/%.h $(BUILD_DIR)/assets/audio/soundfonts/%.name: assets/audio/soundfonts/%.xml $(AIFC_FILES) $(SAMPLEBANK_XMLS)
+$(BUILD_DIR)/assets/audio/soundfonts/%.c $(BUILD_DIR)/assets/audio/soundfonts/%.h $(BUILD_DIR)/assets/audio/soundfonts/%.name: $(BUILD_DIR)/assets/audio/soundfonts/%.xml $(AIFC_FILES) $(SAMPLEBANK_BUILD_XMLS)
 # This rule can be triggered for either the .c or .h file, so $@ may refer to either the .c or .h file. A simple
 # substitution $(@:.c=.h) will fail ~50% of the time with -j. Instead, don't assume anything about the suffix of $@.
 	$(SFC) $< $(@:$(suffix $(@F))=.c) $(@:$(suffix $(@F))=.h) $(@:$(suffix $(@F))=.name)
@@ -593,10 +604,10 @@ $(BUILD_DIR)/assets/audio/sequences/%.o: assets/audio/sequences/%.seq $(SOUNDFON
 
 # put together the tables
 
-$(BUILD_DIR)/assets/audio/samplebank_table.h: $(SAMPLEBANK_XMLS)
+$(BUILD_DIR)/assets/audio/samplebank_table.h: $(SAMPLEBANK_BUILD_XMLS)
 	$(ATBLGEN) -banks $@ $^
 
-$(BUILD_DIR)/assets/audio/soundfont_table.h: $(SOUNDFONT_XMLS)
+$(BUILD_DIR)/assets/audio/soundfont_table.h: $(SOUNDFONT_BUILD_XMLS)
 	$(ATBLGEN) -fonts $@ $^
 
 SEQ_ORDER_DEFS := -DDEFINE_SEQUENCE_PTR\(name,seqId,_2,_3,_4,_5\)=*\(name,seqId\) \

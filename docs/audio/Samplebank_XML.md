@@ -29,7 +29,7 @@ Samplebank XMLs describe which sample files to include in a particular sampleban
     />
     <!-- Adds a sample to the samplebank. Should be a VADPCM compressed AIFC file. -->
     <!--    Name: Name of this sample. -->
-    <!--    Path: Path to aifc file (typically in build/assets/samples/) -->
+    <!--    Path: Path to aifc file (typically in $(BUILD_DIR)/assets/samples/) -->
 
     <Blob
         Name="<C Identifier>"
