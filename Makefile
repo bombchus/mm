@@ -417,7 +417,7 @@ setup:
 	$(PYTHON) tools/buildtools/decompress_baserom.py $(VERSION)
 	$(PYTHON) tools/buildtools/extract_baserom.py $(BASEROM_DIR)/baserom-decompressed.z64 -o $(EXTRACTED_DIR)/baserom --dmadata-start `cat $(BASEROM_DIR)/dmadata_start.txt` --dmadata-names $(BASEROM_DIR)/dmadata_names.txt
 	$(PYTHON) tools/buildtools/extract_yars.py $(VERSION)
-	$(MAKE) -C audio-setup
+	$(MAKE) audio-setup
 
 assets:
 	$(PYTHON) extract_assets.py -j $(N_THREADS) -Z Wno-hardcoded-pointer
