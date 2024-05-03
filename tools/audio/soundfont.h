@@ -1,3 +1,11 @@
+/**
+ * SPDX-FileCopyrightText: Copyright (C) 2024 ZeldaRET
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 #ifndef SOUNDFONT_H_
 #define SOUNDFONT_H_
 
@@ -20,7 +28,7 @@ typedef struct sample_data {
 
     const char *name;
     double sample_rate;
-    int base_note;
+    int8_t base_note;
     bool is_dd;
     bool cached;
     aifc_data aifc;

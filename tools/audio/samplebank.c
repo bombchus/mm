@@ -1,3 +1,11 @@
+/**
+ * SPDX-FileCopyrightText: Copyright (C) 2024 ZeldaRET
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 #include <assert.h>
 #include "xml.h"
 #include "samplebank.h"
@@ -24,10 +32,10 @@ typedef struct {
 void
 read_samplebank_xml(samplebank *sb, xmlDocPtr doc)
 {
-    // <SampleBank Name="", Index="" Medium="" CachePolicy="" BufferBug="">
+    // <SampleBank Name="" Index="" Medium="" CachePolicy="" BufferBug="">
     //     <Pointer Index=""/>
-    //     <Sample Name="", Path=""/>
-    //     <Blob Name="", Path=""/>
+    //     <Sample Name="" Path=""/>
+    //     <Blob Name="" Path=""/>
 
     static const xml_attr_spec header_spec = {
         {"Name",         false, xml_parse_c_identifier, offsetof(samplebank, name)        },

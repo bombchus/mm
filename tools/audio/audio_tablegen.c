@@ -1,3 +1,11 @@
+/**
+ * SPDX-FileCopyrightText: Copyright (C) 2024 ZeldaRET
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
@@ -664,9 +672,9 @@ usage(const char *progname)
 int
 main(int argc, char **argv)
 {
-    // -banks -o [header_out] [files...]
-    // -fonts -o [header_out] [files...]
-    // -sequences -o [seq_font_tbl_out] [order] [files...]
+    // -banks [header_out] [files...]
+    // -fonts [header_out] [files...]
+    // -sequences [seq_font_tbl_out] [order] [files...]
     int ret = EXIT_SUCCESS;
 
     const char *progname = argv[0];

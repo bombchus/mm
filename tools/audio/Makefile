@@ -21,6 +21,7 @@ all: $(PROGRAMS)
 
 clean:
 	$(RM) $(PROGRAMS)
+	$(MAKE) -C sampleconv clean
 
 distclean: clean
 	$(MAKE) -C sampleconv distclean
@@ -42,4 +43,4 @@ sbc: samplebank_compiler.c samplebank.c aifc.c xml.c util.c
 	$(CC) $(CFLAGS) $(OPTFLAGS) $(XML_CFLAGS) $^ $(XML_LDFLAGS) -o $@
 
 sfc: soundfont_compiler.c samplebank.c soundfont.c aifc.c xml.c util.c
-	$(CC) $(CFLAGS) $(OPTFLAGS) $(XML_CFLAGS) $^ $(XML_LDFLAGS) -o $@
+	$(CC) $(CFLAGS) $(OPTFLAGS) -DSFC_MM $(XML_CFLAGS) $^ $(XML_LDFLAGS) -o $@

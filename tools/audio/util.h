@@ -1,3 +1,5 @@
+/* SPDX-FileCopyrightText: Copyright (C) 2024 ZeldaRET */
+/* SPDX-License-Identifier: CC0-1.0 */
 #ifndef UTIL_H_
 #define UTIL_H_
 
@@ -45,15 +47,6 @@ void *
 util_read_whole_file(const char *filename, size_t *size_out);
 void
 util_write_whole_file(const char *filename, const void *data, size_t size);
-
-bool
-isdir(struct dirent *dp);
-
-char *
-path_join(const char *root, const char *f);
-
-void
-dir_walk_rec(const char *root, void (*callback)(const char *, void *), void *udata);
 
 bool
 str_is_c_identifier(const char *str);
