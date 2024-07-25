@@ -179,9 +179,33 @@ u16 sCustomSequencePc;
 
 // Sfx Data
 // If the Sfx Bank has more than 255 values (max value of u8)
-u8 gIsLargeSfxBank[] = {
-    true, false, true, true, false, false, true,
+#define DEFINE_SFX(_0, _1, _2, _3, _4, _5, _6) 1 +
+u8 gIsLargeSfxBank[7] = {
+    (
+#include "tables/sfx/playerbank_table.h"
+        0) > UINT8_MAX,
+    (
+#include "tables/sfx/itembank_table.h"
+        0) > UINT8_MAX,
+    (
+#include "tables/sfx/environmentbank_table.h"
+        0) > UINT8_MAX,
+    (
+#include "tables/sfx/enemybank_table.h"
+        0) > UINT8_MAX,
+    (
+#include "tables/sfx/systembank_table.h"
+        0) > UINT8_MAX,
+    (
+#include "tables/sfx/ocarinabank_table.h"
+        0) > UINT8_MAX,
+    (
+#include "tables/sfx/voicebank_table.h"
+        0) > UINT8_MAX,
 };
+#undef DEFINE_SFX
+
+// TODO generate this?
 u8 D_801D6608[] = {
     true, true, true, true, true, false, true,
 };
@@ -279,8 +303,8 @@ u8 sObjSoundMainBgmSeqId = NA_BGM_GENERAL_SFX;
 // Unused, repurposed for SubBgm
 #define SEQ_FLAG_NO_AMBIENCE (1 << 7)
 
-#define DEFINE_SEQUENCE(name, seqId, storageMedium, cachePolicy, seqFlags, seqPlayer) seqFlags,
-#define DEFINE_SEQUENCE_PTR(seqIdReal, seqId, storageMediumReal, cachePolicyReal, seqFlags, seqPlayer) seqFlags,
+#define DEFINE_SEQUENCE(name, seqId, storageMedium, cachePolicy, seqFlags) seqFlags,
+#define DEFINE_SEQUENCE_PTR(seqIdReal, seqId, storageMediumReal, cachePolicyReal, seqFlags) seqFlags,
 u8 sSeqFlags[] = {
 #include "tables/sequence_table.h"
 };

@@ -3,6 +3,7 @@
 
 #include "libc/stdbool.h"
 #include "../alignment.h"
+#include "../attributes.h"
 #include "effects.h"
 #include "load.h"
 #include "soundfont.h"
