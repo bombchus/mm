@@ -449,7 +449,7 @@ CMD_SPEC = (
     # non-argbits commands
     MMLCmd(0xF1, 'allocnotelist',  sections=(SqSection.SEQ,), args=(ArgU8,)),
     MMLCmd(0xF0, 'freenotelist',   sections=(SqSection.SEQ,)),
-    MMLCmd(0xEF, 'unk_EF',         sections=(SqSection.SEQ,), args=(ArgS16, ArgU8,)),
+    MMLCmd(0xEF, 'print',         sections=(SqSection.SEQ,), args=(ArgS16, ArgU8,)),
     MMLCmd(0xDF, 'transpose',      sections=(SqSection.SEQ,), args=(ArgS8,)),
     MMLCmd(0xDE, 'rtranspose',     sections=(SqSection.SEQ,), args=(ArgS8,)),
     MMLCmd(0xDD, 'tempo',          sections=(SqSection.SEQ,), args=(ArgU8,)),
