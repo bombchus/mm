@@ -456,7 +456,7 @@ CMD_SPEC = (
     MMLCmd(0xDC, 'tempochg',       sections=(SqSection.SEQ,), args=(ArgS8,)),
     MMLCmd(0xDB, 'vol',            sections=(SqSection.SEQ,), args=(ArgU8,)),
     MMLCmd(0xDA, 'volchg',         sections=(SqSection.SEQ,), args=(ArgU8, ArgS16)),
-    MMLCmd(0xD9, "volexpr",        sections=(SqSection.SEQ,), args=(ArgU8,)),
+    MMLCmd(0xD9, 'volexpr',        sections=(SqSection.SEQ,), args=(ArgU8,)),
     MMLCmd(0xD7, 'initchan',       sections=(SqSection.SEQ,), args=(ArgBitField16,)),
     MMLCmd(0xD6, 'freechan',       sections=(SqSection.SEQ,), args=(ArgBitField16,)),
     MMLCmd(0xD5, 'mutescale',      sections=(SqSection.SEQ,), args=(ArgS8,)),
