@@ -828,8 +828,8 @@ $reladdr\@:
  *
  *  Has no function.
  */
-.macro unk_EF arg1, arg2
-    _wr_cmd_id  unk_EF, 0xEF,,,,,,,, 0, 0
+.macro print arg1, arg2
+    _wr_cmd_id  print, 0xEF,,,,,,,, 0, 0
     _wr_s16     \arg1
     _w_u8       \arg2
 .endm
@@ -839,8 +839,8 @@ $reladdr\@:
  *
  *  Fine-tunes the pitch bend amount for the channel or layer.
  */
-.macro bendfine amt
-    _wr_cmd_id  bendfine, ,0xEE,0xCE,,,,,, 0, 0
+.macro bend2 amt
+    _wr_cmd_id  bend2, ,0xEE,0xCE,,,,,, 0, 0
     _wr_s8      \amt
 .endm
 
@@ -859,8 +859,8 @@ $reladdr\@:
  *
  *  Resets channel vibrato, filter, gain, sustain, etc. state
  */
-.macro vibreset
-    _wr_cmd_id  vibreset, ,0xEC,,,,,,, 0, 0
+.macro chanreset
+    _wr_cmd_id  chanreset, ,0xEC,,,,,,, 0, 0
 .endm
 
 /**
@@ -868,8 +868,8 @@ $reladdr\@:
  *
  *  Updates the soundfont and instrument for the channel simultaneously.
  */
-.macro fontinstr fontId, instId
-    _wr_cmd_id  fontinstr, ,0xEB,,,,,,, 0, 0
+.macro bankinstr fontId, instId
+    _wr_cmd_id  bankinstr, ,0xEB,,,,,,, 0, 0
     _wr_u8      \fontId
     _wr_u8      \instId
 .endm
@@ -879,8 +879,8 @@ $reladdr\@:
  *
  *  Set note priorities.
  */
-.macro notepri priority
-    _wr_cmd_id  notepri, ,0xE9,,,,,,, 0, 0
+.macro noteprio priority
+    _wr_cmd_id  noteprio, ,0xE9,,,,,,, 0, 0
     _wr_u8      \priority
 .endm
 
@@ -972,8 +972,8 @@ $reladdr\@:
  *
  *  Changes the expression amount for the channel.
  */
-.macro volexp amt
-    _wr_cmd_id  volexp, ,0xE0,,,,,,, 0, 0
+.macro volexpr amt
+    _wr_cmd_id  volexpr, ,0xE0,,,,,,, 0, 0
     _wr_u8      \amt
 .endm
 
@@ -1026,8 +1026,8 @@ $reladdr\@:
  *
  *      finalPan = (weight * channelPan + (128 - weight) * layerPan) / 128
  */
-.macro panweight weight
-    _wr_cmd_id  panweight, ,0xDC,,,,,,, 0, 0
+.macro panmix weight
+    _wr_cmd_id  panmix, ,0xDC,,,,,,, 0, 0
     _wr_u8      \weight
 .endm
 
@@ -1041,8 +1041,8 @@ $reladdr\@:
     _wr_u8      \amt
 .endm
 
-.macro volmode arg
-    _wr_cmd_id  volmode, 0xDA,,,,,,,, 0, 0
+.macro volchg arg
+    _wr_cmd_id  volchg, 0xDA,,,,,,,, 0, 0
     _wr_s8      \arg
 .endm
 
@@ -1128,7 +1128,7 @@ $reladdr\@:
  *
  *  Sets the pitch bend amount for this channel.
  */
-.macro bend amt
+.macro bend12 amt
     _wr_cmd_id  bend, ,0xD3,,,,,,, 0, 0
     _wr_s8      \amt
 .endm
@@ -1243,8 +1243,8 @@ $reladdr\@:
  *
  *  Set the current soundfont for this channel to `fontId`.
  */
-.macro font fontId
-    _wr_cmd_id  font, ,0xC6,,,,,,, 0, 0
+.macro bank fontId
+    _wr_cmd_id  bank, ,0xC6,,,,,,, 0, 0
     _wr_u8      \fontId
 .endm
 
@@ -1351,30 +1351,30 @@ $reladdr\@:
         _var        \arg1
     .endm
 
-    .macro unk_A5
-        _wr_cmd_id  unk_A5, ,0xA5,,,,,,, 0, 0
+    .macro addchanidx
+        _wr_cmd_id  addchanidx, ,0xA5,,,,,,, 0, 0
     .endm
 
-    .macro unk_A4 arg0
-        _wr_cmd_id  unk_A4, ,0xA4,,,,,,, 0, 0
+    .macro surroundeffectidx arg0
+        _wr_cmd_id  surroundeffectidx, ,0xA4,,,,,,, 0, 0
         _var        \arg0
     .endm
 
-    .macro unk_A3
-        _wr_cmd_id  unk_A3, ,0xA3,,,,,,, 0, 0
+    .macro stsfxstateptr
+        _wr_cmd_id  stsfxstateptr, ,0xA3,,,,,,, 0, 0
     .endm
 
-    .macro unk_A2 arg0
-        _wr_cmd_id  unk_A2, ,0xA2,,,,,,, 0, 0
+    .macro stsfxstate arg0
+        _wr_cmd_id  stsfxstate, ,0xA2,,,,,,, 0, 0
         _var        \arg0
     .endm
 
-    .macro unk_A1
+    .macro ldsfxstateptr
         _wr_cmd_id  unk_A1, ,0xA1,,,,,,, 0, 0
     .endm
 
-    .macro unk_A0 arg0
-        _wr_cmd_id  unk_A0, ,0xA0,,,,,,, 0, 0
+    .macro ldsfxstate arg0
+        _wr_cmd_id  ldsfxstate, ,0xA0,,,,,,, 0, 0
         _var        \arg0
     .endm
 
@@ -1397,8 +1397,8 @@ $reladdr\@:
  *  Enable comb filter.
  *  TODO args? arg0=16,arg1=val<<8 maps well to midi chorus
  */
-.macro combfilter arg0, arg1
-    _wr_cmd_id  combfilter, ,0xBB,,,,,,, 0, 0
+.macro chorus arg0, arg1
+    _wr_cmd_id  chorus, ,0xBB,,,,,,, 0, 0
     _wr_u8      \arg0
     _wr_u16     \arg1
 .endm
@@ -1513,8 +1513,8 @@ $reladdr\@:
  *  `label` is a relative offset rather than an absolute offset, making it appropriate
  *  for use in position-independent code.
  */
-.macro rldlayer layerNum, label
-    _wr_cmd_id  rldlayer, ,0x78,,,,,,, \layerNum, 3
+.macro rlayerptr layerNum, label
+    _wr_cmd_id  rlayerptr, ,0x78,,,,,,, \layerNum, 3
     _wr_16_rel  \label
 .endm
 
@@ -1536,8 +1536,8 @@ $reladdr\@:
  *
  *  Opens the note layer at `label` for index `layerNum`.
  */
-.macro ldlayer layerNum, label
-    _wr_cmd_id  ldlayer, ,0x88,,,,,,, \layerNum, 3
+.macro layerptr layerNum, label
+    _wr_cmd_id  layerptr, ,0x88,,,,,,, \layerNum, 3
     _wr_lbl     \label
 .endm
 
@@ -1642,8 +1642,8 @@ $reladdr\@:
  *
  *  Opens the sequence channel for index `channelNum` with data beginning at `label`.
  */
-.macro ldchan channelNum, label
-    _wr_cmd_id  ldchan, 0x90,0x20,,,,,,, \channelNum, 4
+.macro chanptr channelNum, label
+    _wr_cmd_id  chanptr, 0x90,0x20,,,,,,, \channelNum, 4
     _wr_lbl     \label
 .endm
 
@@ -1654,8 +1654,8 @@ $reladdr\@:
  *  `label` is a relative offset rather than an absolute offset, making it appropriate
  *  for use in position-independent code.
  */
-.macro rldchan channelNum, label
-    _wr_cmd_id  rldchan, 0xA0,,,,,,,, \channelNum, 4
+.macro rchanptr channelNum, label
+    _wr_cmd_id  rchanptr, 0xA0,,,,,,,, \channelNum, 4
     _wr_16_rel  \label
 .endm
 
