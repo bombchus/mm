@@ -294,9 +294,9 @@
         .error "Invalid section for `filter`"
     .endm
 
-    .purgem env
-    .macro env
-        .error "Invalid section for `env`"
+    .purgem envelope
+    .macro envelope
+        .error "Invalid section for `envelope`"
     .endm
 .endm
 
@@ -305,7 +305,7 @@
 .endm
 .macro filter
 .endm
-.macro env
+.macro envelope
 .endm
 
 /* Instantiate above macros */
@@ -352,10 +352,10 @@ _RESET_SECTION
         _wr_u8 (\lowpassCutoff << 4) | (\highpassCutoff)
     .endm
 
-    /* `env` changes structure based on current section. */
-    .purgem env
-    .macro env label
-        _wr_cmd_id env, ,0xDA,,,,,,, 0, 0
+    /* `envelope` changes structure based on current section. */
+    .purgem envelope
+    .macro envelope label
+        _wr_cmd_id envelope, ,0xDA,,,,,,, 0, 0
         _wr_lbl \label
     .endm
 
@@ -369,10 +369,10 @@ _RESET_SECTION
 .macro .layer name
     _RESET_SECTION
 
-    /* `env` changes structure based on current section. */
-    .purgem env
-    .macro env label, arg
-        _wr_cmd_id env, ,,0xCB,,,,,, 0, 0
+    /* `envelope` changes structure based on current section. */
+    .purgem envelope
+    .macro envelope label, arg
+        _wr_cmd_id envelope, ,,0xCB,,,,,, 0, 0
         _wr_lbl \label
         _wr_u8 \arg
     .endm
