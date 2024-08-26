@@ -115,6 +115,7 @@ ReverbSettings* gReverbSettingsTable[] = {
 };
 
 AudioSpec gAudioSpecs[21] = {
+    /* z64audio.h audiospec */
     /* 0x0 */
     { 32000, 1, 24, 5, 0, 0, 2, reverbSettingsF, 0x500, 0x200, 0x7FFF, 0xAF0, 0x2D80, 0, 0x4100, 0x2D00, 0, 0,
       0xDC800 },
