@@ -516,11 +516,11 @@ typedef struct Note {
 
 typedef struct {
     /* 0x00 */ u8 downsampleRate;
-    /* 0x02 */ u16 delayNumSamples;
+    /* 0x02 */ u16 delayNumSamples; // determines the delay before the samples plays — echo
     /* 0x04 */ u16 decayRatio; // determines how fast reverb dissipates
     /* 0x06 */ u16 subDelay;
-    /* 0x08 */ u16 subVolume;
-    /* 0x0A */ u16 volume;
+    /* 0x08 */ u16 subVolume; 
+    /* 0x0A */ u16 volume; // determines the overall loudness of the sample for the wet channel
     /* 0x0C */ u16 leakRtl;
     /* 0x0E */ u16 leakLtr;
     /* 0x10 */ s8 mixReverbIndex;
@@ -540,8 +540,8 @@ typedef struct {
     /* 0x06 */ u8 numSequencePlayers;
     /* 0x07 */ u8 unk_07; // unused, set to zero
     /* 0x08 */ u8 unk_08; // unused, set to zero
-    /* 0x09 */ u8 numReverbs;
-    /* 0x0C */ ReverbSettings* reverbSettings;
+    /* 0x09 */ u8 numReverbs; // number of reverb settings available to the spec from the specified reverb settings preset
+    /* 0x0C */ ReverbSettings* reverbSettings; // reverb settings preset to use
     /* 0x10 */ u16 sampleDmaBufSize1;
     /* 0x12 */ u16 sampleDmaBufSize2;
     /* 0x14 */ u16 unk_14;
