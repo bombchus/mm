@@ -262,46 +262,53 @@ void AudioScript_InitSequenceChannel(SequenceChannel* channel) {
         return;
     }
 
-    channel->enabled = false;
-    channel->finished = false;
-    channel->stopScript = false;
-    channel->muted = false;
-    channel->hasInstrument = false;
-    channel->stereoHeadsetEffects = false;
-    channel->transposition = 0;
-    channel->largeNotes = false;
-    channel->bookOffset = 0;
-    channel->stereoData.asByte = 0;
-    channel->changes.asByte = 0xFF;
-    channel->scriptState.depth = 0;
-    channel->newPan = 0x40;
-    channel->panChannelWeight = 0x80;
-    channel->surroundEffectIndex = 0xFF;
-    channel->velocityRandomVariance = 0;
-    channel->gateTimeRandomVariance = 0;
-    channel->noteUnused = NULL;
-    channel->reverbIndex = 0;
-    channel->targetReverbVol = 0;
-    channel->gain = 0;
-    channel->notePriority = 3;
-    channel->someOtherPriority = 1;
-    channel->delay = 0;
-    channel->adsr.envelope = gDefaultEnvelope;
-    channel->adsr.decayIndex = 0xF0;
-    channel->adsr.sustain = 0;
-    channel->vibrato.vibratoRateTarget = 0x800;
-    channel->vibrato.vibratoRateStart = 0x800;
-    channel->vibrato.vibratoDepthTarget = 0;
-    channel->vibrato.vibratoDepthStart = 0;
-    channel->vibrato.vibratoRateChangeDelay = 0;
-    channel->vibrato.vibratoDepthChangeDelay = 0;
-    channel->vibrato.vibratoDelay = 0;
-    channel->filter = NULL;
-    channel->combFilterGain = 0;
-    channel->combFilterSize = 0;
-    channel->volume = 1.0f;
-    channel->volumeScale = 1.0f;
-    channel->freqScale = 1.0f;
+    /*
+     * Sequence Initial Values for Channels
+     * The hierarchy for the values is as follows:
+     *   1. Use Sequence command value if available
+     *   2. Fallback to Audiobank Value if available
+     *   3. Fallback to Initial value listed below
+     */
+    channel->enabled = false;                      // Channel Enabled
+    channel->finished = false;                     // Channel Disabled
+    channel->stopScript = false;                   // Stop Script Processing (immediately exit current loop)
+    channel->muted = false;                        // Channel Muted
+    channel->hasInstrument = false;                // Program Change
+    channel->stereoHeadsetEffects = false;         // Stereo Headset Effects Enabled
+    channel->transposition = 0;                    // Transposition
+    channel->largeNotes = false;                   // Legato
+    channel->bookOffset = 0;                       // Codebook Offset
+    channel->stereoData.asByte = 0;                // Stereo Headset Effect Data as Byte
+    channel->changes.asByte = 0xFF;                // ???
+    channel->scriptState.depth = 0;                // ???
+    channel->newPan = 0x40;                        // Pan (0x00 is full left, 0x40 is center, 0x7F is full right)
+    channel->panChannelWeight = 0x80;              // Pan Mix (0 is Layer-only, 128 is Channel-only)
+    channel->surroundEffectIndex = 0xFF;           // Surround Effect Index
+    channel->velocityRandomVariance = 0;           // Velocity Humanization
+    channel->gateTimeRandomVariance = 0;           // Bugged Gatetime Humanization uses velocity value instead
+    channel->noteUnused = NULL;                    // ???
+    channel->reverbIndex = 0;                      // Index for Reverb Settings in Scene's audiospec assigned Reverb Settings
+    channel->targetReverbVol = 0;                  // Reverb Volume for the Wet Channel
+    channel->gain = 0;                             // HiLo Gain
+    channel->notePriority = 3;                     // Priority (Min 0, Max 10 as described by Nintendo in the N64 ProMan)
+    channel->someOtherPriority = 1;                // Fallback Priority(?)
+    channel->delay = 0;                            // Delay (Script Control Flow)
+    channel->adsr.envelope = gDefaultEnvelope;     // Envelope
+    channel->adsr.decayIndex = 0xF0;               // Release Rate
+    channel->adsr.sustain = 0;                     // Sustain
+    channel->vibrato.vibratoRateTarget = 0x800;    // Vibrato Rate Target
+    channel->vibrato.vibratoRateStart = 0x800;     // Vibrato Rate Start
+    channel->vibrato.vibratoDepthTarget = 0;       // Vibrato Depth Target
+    channel->vibrato.vibratoDepthStart = 0;        // Vibrato Depth Start
+    channel->vibrato.vibratoRateChangeDelay = 0;   // Vibrato Rate Change Delay
+    channel->vibrato.vibratoDepthChangeDelay = 0;  // Vibrato Depth Change Delay
+    channel->vibrato.vibratoDelay = 0;             // Vibrato Delay
+    channel->filter = NULL;                        // Channel Filter
+    channel->combFilterGain = 0;                   // Chorus Gain
+    channel->combFilterSize = 0;                   // Chorus Size
+    channel->volume = 1.0f;                        // Volume (Represented as f32 multipler)
+    channel->volumeScale = 1.0f;                   // Expression (Represented as f32 multiplier)
+    channel->freqScale = 1.0f;                     // Pitch Bend (Represented as f32 multiplier)
 
     for (i = 0; i < ARRAY_COUNT(channel->seqScriptIO); i++) {
         channel->seqScriptIO[i] = SEQ_IO_VAL_NONE;
@@ -331,42 +338,49 @@ s32 AudioScript_SeqChannelSetLayer(SequenceChannel* channel, s32 layerIndex) {
 
     layer = channel->layers[layerIndex];
 
-    layer->channel = channel;
-    layer->adsr = channel->adsr;
-    layer->adsr.decayIndex = 0;
-    layer->targetReverbVol = channel->targetReverbVol;
-    layer->enabled = true;
-    layer->finished = false;
-    layer->muted = false;
-    layer->continuousNotes = false;
-    layer->bit3 = false;
-    layer->ignoreDrumPan = false;
-    layer->bit1 = false;
-    layer->notePropertiesNeedInit = false;
-    layer->gateTime = 0x80;
-    layer->surroundEffectIndex = 0x80;
-    layer->stereoData.asByte = 0;
-    layer->portamento.mode = PORTAMENTO_MODE_OFF;
-    layer->scriptState.depth = 0;
-    layer->pan = 0x40;
-    layer->transposition = 0;
-    layer->delay = 0;
-    layer->gateDelay = 0;
-    layer->delay2 = 0;
-    layer->note = NULL;
-    layer->instrument = NULL;
-    layer->instOrWave = 0xFF;
-    layer->unk_0A.asByte = 0xFFFF;
-    layer->vibrato.vibratoRateTarget = 0x800;
-    layer->vibrato.vibratoRateStart = 0x800;
-    layer->vibrato.vibratoDepthTarget = 0;
-    layer->vibrato.vibratoDepthStart = 0;
-    layer->vibrato.vibratoRateChangeDelay = 0;
-    layer->vibrato.vibratoDepthChangeDelay = 0;
-    layer->vibrato.vibratoDelay = 0;
-    layer->freqScale = 1.0f;
-    layer->bend = 1.0f;
-    layer->velocitySquare2 = 0.0f;
+    /*
+     * Sequence Initial Values for Layers/Tracks
+     * The hierarchy for the values is as follows:
+     *   1. Use Sequence command value if available
+     *   2. Fallback to Channel Value if available
+     *   3. Fallback to Initial value listed below
+     */
+    layer->channel = channel;                           // Assigned Channel
+    layer->adsr = channel->adsr;                        // Envelope
+    layer->adsr.decayIndex = 0;                         // Release Rate
+    layer->targetReverbVol = channel->targetReverbVol;  // Reverb Volume for the Wet Channel
+    layer->enabled = true;                              // Layer Enabled
+    layer->finished = false;                            // Layer Disabled
+    layer->muted = false;                               // Layer Muted
+    layer->continuousNotes = false;                     // Legato
+    layer->bit3 = false;                                // Helps determine synthetic wave playback during script processing 
+    layer->ignoreDrumPan = false;                       // Ignore Drum Pan
+    layer->bit1 = false;                                // Helps determine synthetic wave playback during script processing 
+    layer->notePropertiesNeedInit = false;              // Helps determine if notes need initialization during script processing
+    layer->gateTime = 0x80;                             // Note Gatetime
+    layer->surroundEffectIndex = 0x80;                  // Surround Effect Index
+    layer->stereoData.asByte = 0;                       // Stereo Headset Effect Data as Byte
+    layer->portamento.mode = PORTAMENTO_MODE_OFF;       // Portamento Mode
+    layer->scriptState.depth = 0;                       // ???
+    layer->pan = 0x40;                                  // Pan
+    layer->transposition = 0;                           // Transposition
+    layer->delay = 0;                                   // Delay (Script Control Flow)
+    layer->gateDelay = 0;                               // Helps calculate Gatetime Humanization
+    layer->delay2 = 0;                                  // Always ends up equal to layer->delay /shrug
+    layer->note = NULL;                                 // Helps determine note during script processing
+    layer->instrument = NULL;                           // Program Change
+    layer->instOrWave = 0xFF;                           // This value is very confusing to understand, but helps determine instrument types
+    layer->unk_0A.asByte = 0xFFFF;                      // ???
+    layer->vibrato.vibratoRateTarget = 0x800;           // Vibrato Rate Target
+    layer->vibrato.vibratoRateStart = 0x800;            // Vibrato Rate Start
+    layer->vibrato.vibratoDepthTarget = 0;              // Vibrato Depth Target
+    layer->vibrato.vibratoDepthStart = 0;               // Vibrato Depth Start
+    layer->vibrato.vibratoRateChangeDelay = 0;          // Vibrato Rate Delay
+    layer->vibrato.vibratoDepthChangeDelay = 0;         // Vibrato Depth Delay
+    layer->vibrato.vibratoDelay = 0;                    // Vibrato Delay
+    layer->freqScale = 1.0f;                            // Pitch Bend Multiplier?
+    layer->bend = 1.0f;                                 // Pitch Bend (±2 Semitone Table Only)
+    layer->velocitySquare2 = 0.0f;                      // Helps calculate Velocity Humanization
 
     return 0;
 }
