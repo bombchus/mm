@@ -64,7 +64,7 @@ typedef struct {
     /* 0x06 */ u8 numSequencePlayers;
     /* 0x07 */ u8 unk_07; // unused, set to zero
     /* 0x08 */ u8 unk_08; // unused, set to zero
-    /* 0x09 */ u8 numReverbs;
+    /* 0x09 */ u8 numReverbs; // number of reverb settings available to the spec from the specified preset
     /* 0x0C */ ReverbSettings* reverbSettings;
     /* 0x10 */ u16 sampleDmaBufSize1;
     /* 0x12 */ u16 sampleDmaBufSize2;
